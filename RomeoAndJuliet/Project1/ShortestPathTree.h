@@ -5,7 +5,6 @@
 #include "PointS.h"
 using namespace std;
 
-Tree SPT = Tree();
 
 class SPTnode
 {
@@ -26,6 +25,35 @@ public:
 		parent = _parent;
 		children = vector<SPTnode*>();
 	}
+	SPTnode(int _vertexID, int _parent)
+	{
+		vertexID = _vertexID;
+		parent = find_node(_parent);
+		children = vector<SPTnode*>();
+	}
+	SPTnode* find_node(int ID)
+	{
+		if (vertexID == ID)
+			return this;
+		else
+		{
+			for (int i = 0; i < children.size(); i++)
+			{
+				SPTnode* node= children[i]->find_node(ID);
+				if (node != NULL)
+					return node;					
+			}
+			return NULL;
+		}
+	}
+	SPTnode* get_parent()
+	{
+		return parent;
+	}
+	SPTnode* add_child(SPTnode* new_child)
+	{
+		children.push_back(new_child);
+	}
 };
 class SPT
 {
@@ -33,6 +61,11 @@ class SPT
 	vector<int> components;
 
 public:
+	SPT()
+	{
+		root = NULL;
+		components = vector<int>();
+	}
 	SPT(int root)
 	{
 		SPTnode root = SPTnode(root, NULL);
@@ -49,22 +82,21 @@ public:
 		//now we can be sure that the parent is a node in the tree!!
 		
 		//add the leaf to components list and set the parent
-		//we will use the function get_node
-
-
-
+		SPTnode new_leaf = SPTnode(leaf, parent);
+		new_leaf.get_parent()->add_child(&new_leaf);
 	}
 	SPTnode* get_node(int vertex)
 	{
 		if (find(components.begin(), components.end(), vertex) == components.end())
 			return NULL; //NO CORRESPONDING NODE IN THE TREE SO FAR
 
-		
+		return root->find_node(vertex);	
 	}
 	SPTnode* get_pred(int vertex)
 	{
 		//find the parent of the node representing 'vertex' in the tree!
-		
+		SPTnode* node = get_node(vertex);
+		return node->get_parent();	
 	}
 };
 
@@ -91,6 +123,8 @@ public:
 	}
 };
 
+SPT spt = SPT();
+
 void find_shortest_path_tree(int);
 void split_funnel(int, Funnel, int);
 
@@ -112,6 +146,8 @@ void find_shortest_path_tree(int s)
 		Funnel* temp = new Funnel(s, triangle_with_s[i % 3], triangle_with_s[(i + 1) % 3]);
 
 		//set predecessor of each vertex!
+		spt.set_pred(triangle_with_s[i % 3], s);
+		spt.set_pred(triangle_with_s[(i + 1) % 3], s);
 
 		//call split
 	}

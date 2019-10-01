@@ -1,8 +1,10 @@
 #pragma once
 #include<iostream>
 #include<vector>
+#include<cmath>
 #include "Tree.h"
 #include "PointS.h"
+
 using namespace std;
 
 
@@ -106,7 +108,7 @@ class Funnel
 	int apex;	// apex's vertex id in point_list
 	int alpha;	// an edge's endpoint id
 	int beta;	//other point of the edge
-	vector<int> vertex_list;
+	vector<int> vertex_list; //starts with alpha and ends with beta
 
 public:
 	Funnel()
@@ -121,12 +123,16 @@ public:
 		alpha = _alpha;
 		beta = _beta;
 	}
+	int get_apex() { return apex; }
+	int get_alpha() { return alpha; }
+	int get_beta() { return beta; }
+	vector<int> get_vertex_list() { return vertex_list; }
 };
 
 SPT spt = SPT();
 
 void find_shortest_path_tree(int);
-void split_funnel(int, Funnel, int);
+void split_funnel(Funnel);
 
 /*constructs the shortest path tree 'SPT' with root as 's'*/
 void find_shortest_path_tree(int s)
@@ -150,12 +156,22 @@ void find_shortest_path_tree(int s)
 		spt.set_pred(triangle_with_s[(i + 1) % 3], s);
 
 		//call split
+		split_funnel(temp);
 	}
 
 
 }
 
-void split_funnel(int diag, Funnel funnel, int apex)
+void split_funnel(Funnel* funnel)
 {
+	int alpha = funnel->get_alpha();
+	int beta = funnel->get_beta();
+	int apex = funnel->get_apex();
 
+	//if alpha and beta are adjacent numbers (meaning the diagonal is a polygon edge), return
+	if (abs(alpha - beta) == 1 || abs(alpha - beta) == (v_num - 1))
+		return;
+
+
+	
 }

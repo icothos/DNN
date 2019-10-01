@@ -9,6 +9,8 @@
 
 #define PI 3.1415926535897931
 
+PointS point_state;
+
 point_type max_y;
 point_type min_y;
 point_type max_x;

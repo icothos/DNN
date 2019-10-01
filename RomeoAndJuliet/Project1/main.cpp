@@ -31,7 +31,7 @@ vector<Point> test_points;
 vector<int> sequence_diagonal;
 int d_size;
 Hourglass final_hour;
-PointS point_state;
+
 int test_point_index;
 
 
@@ -745,8 +745,8 @@ void add_test_point(int button, int state, int x, int y) {
 				Point e1(282, 448);
 				Point e2(372, 400);
 				//shortest_path_to_line(p1, e1, e2);//////////////////////////////////////
-				//int testing_function = point_state.find_triangle(point_list[6]);
-				//printf("hi");
+				int testing_function = point_state.find_triangle(point_list[6]);
+				printf("hi");
 			}
 			glutPostRedisplay();
 		}

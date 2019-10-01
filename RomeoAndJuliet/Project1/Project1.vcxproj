@@ -159,6 +159,7 @@
     <ClInclude Include="polygon_decomposition.h" />
     <ClInclude Include="polygon_operation.h" />
     <ClInclude Include="print.h" />
+    <ClInclude Include="ShortestPathTree.h" />
     <ClInclude Include="SNode.h" />
     <ClInclude Include="tangent.h" />
     <ClInclude Include="TNODE.h" />

@@ -478,6 +478,80 @@ bool check_inclusive(vector<int> chain, int test_point)
 	else
 		return true;
 }
+
+vector<int> diag_id_to_point_id(vector<int> edge_id_chain)
+{
+	vector<int> point_chain = vector<int>();
+	vector<Edge> edge_chain = vector<Edge>();
+	for (int i = 0; i < edge_id_chain.size(); i++)
+	{
+		edge_chain.push_back(diagonal_list[edge_id_chain[i]]);
+	}
+
+	if (edge_chain.size() > 2)
+	{
+		//origin 을 insert하는 경우
+		int check = edge_chain[0].check_same_point_place(edge_chain[1].get_origin());
+		if (check == -1)
+			check = edge_chain[0].check_same_point_place(edge_chain[1].get_dest());
+
+		switch (check)
+		{
+		case 1:
+			point_chain.push_back(edge_chain[0].get_dest());
+			point_chain.push_back(edge_chain[0].get_origin());
+			break;
+
+		case 2:
+			point_chain.push_back(edge_chain[0].get_origin());
+			point_chain.push_back(edge_chain[0].get_dest());
+			break;
+		default:
+			printf("the chain is not connected\n");
+			exit(1002);
+			break;
+		}
+	}
+	else
+	{
+		printf("error!! polygon must have at least 3 diagonals!!\n");
+	}
+	//point_chain.push_back(edge_chain[0].get_origin())
+	for (int i = 1; i < edge_chain.size(); i++)
+	{
+		if (point_chain.back() == edge_chain[i].get_origin())
+		{
+			point_chain.push_back(edge_chain[i].get_dest());
+		}
+		else if (point_chain.back() == edge_chain[i].get_dest())
+			point_chain.push_back(edge_chain[i].get_origin());
+		else
+		{
+			printf("errorrrlkrjlekjrlksjal\n");
+			exit(282);
+		}
+	}
+
+	if (point_chain.back() == edge_chain.back().get_origin())
+		point_chain.push_back(edge_chain.back().get_dest());
+	else if (point_chain.back() == edge_chain.back().get_dest())
+		point_chain.push_back(edge_chain.back().get_origin());
+	else
+	{
+		printf("error\n");
+		exit(1313);
+	}
+
+	return point_chain;
+}
+bool check_inclusive(vector<int> edge_id_chain, int test_point)
+{
+	vector<int> point_chain = diag_id_to_point_id(edge_id_chain);
+
+	//point_chain should be a valid point list now....!!
+
+	return check_inclusive(point_chain, test_point);
+}
 int check_inclusive(vector<int> chain, int test_point, int neighbor)
 {
 	/*

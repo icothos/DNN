@@ -84,6 +84,15 @@ public:
 			return dest;
 		return -1;
 	}
+	int check_same_point_place(int p)
+	{
+		if (origin == p)
+			return 1; //1 for 'same as origin'
+		else if (dest == p)
+			return 2; //2 for 'same as dest'
+		else
+			return -1; //-1 for none of the above
+	}
 	void set_SNode(SNode* _snode) {
 		cell = _snode;
 	}

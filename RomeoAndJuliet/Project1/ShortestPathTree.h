@@ -247,7 +247,7 @@ int choose_v(Funnel* funnel)
 			vector<int> next_v_candidates = diag_id_to_point_id(child->get_polygon_with_edge());
 			for (int i = 0; i < next_v_candidates.size(); i++)
 			{
-				if (next_v_candidates[i] != alpha || next_v_candidates[i] != beta)
+				if (next_v_candidates[i] != alpha && next_v_candidates[i] != beta)
 				{
 					return next_v_candidates[i];
 				}
@@ -288,7 +288,7 @@ int compute_pred(Funnel* funnel, int v)
 	float angle_alpha = calculate_angle_between(apex, alpha_list[1], v);
 	float angle_beta = calculate_angle_between(apex, beta_list[1], v);
 	vector<int> chain;
-	if (angle_alpha*angle_beta < 0)//different booho
+	if (angle_alpha*angle_beta < 0)//different booho ///this we need to change!!!!!1////////////////////////
 	{
 		return apex;
 	}

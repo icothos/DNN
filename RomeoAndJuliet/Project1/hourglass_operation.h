@@ -485,7 +485,7 @@ vector<int> diag_id_to_point_id(vector<int> edge_id_chain)
 	vector<Edge> edge_chain = vector<Edge>();
 	for (int i = 0; i < edge_id_chain.size(); i++)
 	{
-		edge_chain.push_back(diagonal_list[edge_id_chain[i]]);
+		edge_chain.push_back(diagonal_with_edge_list[edge_id_chain[i]]);
 	}
 
 	if (edge_chain.size() > 2)
@@ -533,9 +533,11 @@ vector<int> diag_id_to_point_id(vector<int> edge_id_chain)
 	}
 
 	if (point_chain.back() == edge_chain.back().get_origin())
-		point_chain.push_back(edge_chain.back().get_dest());
+		point_chain.pop_back();
+	//point_chain.push_back(edge_chain.back().get_dest());
 	else if (point_chain.back() == edge_chain.back().get_dest())
-		point_chain.push_back(edge_chain.back().get_origin());
+		point_chain.pop_back();
+		//point_chain.push_back(edge_chain.back().get_origin());
 	else
 	{
 		printf("error\n");
@@ -544,7 +546,7 @@ vector<int> diag_id_to_point_id(vector<int> edge_id_chain)
 
 	return point_chain;
 }
-bool check_inclusive(vector<int> edge_id_chain, int test_point)
+bool check_inclusive_id(vector<int> edge_id_chain, int test_point)
 {
 	vector<int> point_chain = diag_id_to_point_id(edge_id_chain);
 

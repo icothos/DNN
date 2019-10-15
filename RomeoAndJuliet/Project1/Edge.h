@@ -93,6 +93,25 @@ public:
 		else
 			return -1; //-1 for none of the above
 	}
+	bool check_same_edge(int _origin, int _dest)
+	{
+		if (_origin!=_dest) //not a point
+		{
+			if (_origin == origin && _dest == dest)
+				return true;
+			else if (_origin == dest && _dest == origin)
+				return true;
+			else
+				return false;
+		}
+		else
+		{
+			if (origin == dest && _origin == origin)
+				return true;
+			else
+				return false;
+		}
+	}
 	void set_SNode(SNode* _snode) {
 		cell = _snode;
 	}

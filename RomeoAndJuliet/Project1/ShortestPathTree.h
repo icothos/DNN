@@ -9,6 +9,8 @@
 using namespace std;
 
 
+int find_diagonal_index(int first, int second);
+
 class SPTnode
 {
 	int vertexID; //the id of the vertex the node represents
@@ -56,7 +58,7 @@ public:
 		return parent;
 	}
 	/* Adds the pointer to the leaf SPT node to in the children list of the current node */
-	SPTnode* add_child(SPTnode* new_child)
+	void add_child(SPTnode* new_child)
 	{
 		children.push_back(new_child);
 	}
@@ -72,10 +74,10 @@ public:
 		root = NULL;
 		components = vector<int>();
 	}
-	SPT(int root)
+	SPT(int _root)
 	{
-		SPTnode root = SPTnode(root, NULL);
-		components.push_back(root);
+		root = new SPTnode(_root, NULL);
+		components.push_back(_root);
 	}
 	/*  Add the leaf as a member of the tree and link it to the parent node and return the vertex ID of the leaf
 		If the parent is not part of the tree in the first place, return -1 */
@@ -135,14 +137,32 @@ public:
 	{
 		apex = _apex;
 		diag = _diag;
-		
+		if (_diag < diagonal_with_edge_list.size())
+		{
+			//treats the origin of the diagonal as alpha
+			alpha = diagonal_with_edge_list[_diag].get_origin();
+			beta = diagonal_with_edge_list[_diag].get_dest();
+			vertex_list.push_back(alpha);
+			vertex_list.push_back(apex);
+			vertex_list.push_back(beta);
+		}
+		else//error case
+		{
+			alpha = -1;
+			beta = -1;
+		}
 	}
 	Funnel(int _apex, int _alpha, int _beta)
 	{
-		diag = -1;
+		//diag = -1;
 		apex = _apex;
 		alpha = _alpha;
 		beta = _beta;
+		//need to set the diagonal number if it exists!!
+		diag = find_diagonal_index(_alpha, _beta);
+		vertex_list.push_back(_alpha);
+		vertex_list.push_back(apex);
+		vertex_list.push_back(_beta);
 	}
 	int get_apex() { return apex; }
 	int get_alpha() { return alpha; }
@@ -154,7 +174,8 @@ public:
 SPT spt = SPT();
 
 void find_shortest_path_tree(int);
-void split_funnel(Funnel);
+void split_funnel(Funnel*);
+
 
 /*constructs the shortest path tree 'SPT' with root as 's'*/
 void find_shortest_path_tree(int s)
@@ -204,8 +225,8 @@ int choose_v(Funnel* funnel)
 			//locate in which of the child's cell the apex is located...
 			//choose a vertex v in the other cell
 
-			bool included_in_left_child = check_inclusive(diagonal->get_left_children()->get_polygon_with_edge(), apex);
-			bool included_in_right_child = check_inclusive(diagonal->get_right_children()->get_polygon_with_edge(), apex);
+			bool included_in_left_child = check_inclusive_id(diagonal->get_left_children()->get_polygon_with_edge(), apex);
+			bool included_in_right_child = check_inclusive_id(diagonal->get_right_children()->get_polygon_with_edge(), apex);
 
 			if (included_in_left_child)
 			{
@@ -215,7 +236,7 @@ int choose_v(Funnel* funnel)
 			else if (included_in_right_child)
 			{
 				//choose a vertex v in the left child cell that is not alpha nor beta
-				child = diagonal->get_right_children();
+				child = diagonal->get_left_children();
 			}
 			else
 			{
@@ -246,6 +267,12 @@ int compute_pred(Funnel* funnel, int v)
 	int pred;
 	vector<int> vertex_list = funnel->get_vertex_list();
 
+	if (vertex_list.empty())
+	{
+		printf("funnel's vertex list should not be empty!\n");
+		exit(234);
+	}
+
 	vector<int>::iterator apex_ptr = find(vertex_list.begin(), vertex_list.end(), apex);
 	vector<int> alpha_list, beta_list;
 
@@ -253,7 +280,7 @@ int compute_pred(Funnel* funnel, int v)
 	alpha_list.insert(alpha_list.end(), vertex_list.begin(), apex_ptr);
 	alpha_list.push_back(apex);
 	reverse(alpha_list.begin(), alpha_list.end());
-	beta_list.push_back(apex);
+	//beta_list.push_back(apex);
 	beta_list.insert(beta_list.end(), apex_ptr, vertex_list.end());
 
 	//apex~v 선분과 left, right chain의 첫 edge가 이루는 각도 계산하는 부분이 필요함!!
@@ -281,7 +308,7 @@ int compute_pred(Funnel* funnel, int v)
 
 	if (angle_alpha + angle_beta > 0)//they are both tilted to the right
 	{
-		while (predecessor != chain.end())
+		while (predecessor +1 != chain.end())
 		{
 			float angle = calculate_angle_between(*predecessor, *(predecessor + 1), v);
 			if (angle < 0)
@@ -291,7 +318,7 @@ int compute_pred(Funnel* funnel, int v)
 	}
 	else
 	{
-		while (predecessor != chain.end())
+		while (predecessor +1 != chain.end())
 		{
 			float angle = calculate_angle_between(*predecessor, *(predecessor + 1), v);
 			if (angle > 0)
@@ -317,4 +344,15 @@ void split_funnel(Funnel* funnel)
 
 	int pred = compute_pred(funnel, v);
 	
+	printf("%d\n", pred);
+}
+
+int find_diagonal_index(int first, int second)
+{
+	for (int i = 0; i < diagonal_list.size(); i++) {
+		if (diagonal_list[i].check_same_edge(first, second))
+			return i;
+	}
+
+	return -1;
 }

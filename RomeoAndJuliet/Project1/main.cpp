@@ -15,6 +15,7 @@
 #include <GL/freeglut.h>
 #include <sstream>
 #include "hourglass_operation.h"
+#include "ShortestPathTree.h"
 
 #define NULL_HELPER -1
 #define PI 3.1415926535897931
@@ -378,6 +379,7 @@ void preprocess_polygon()
 
 	construct_hourglasses();
 
+	diagonal_with_edge_list = diagonal_list;
 	diagonal_list = vector<Edge>(diagonal_list.begin(), diagonal_list.begin() + d_size);
 	
 }
@@ -747,6 +749,9 @@ void add_test_point(int button, int state, int x, int y) {
 				//shortest_path_to_line(p1, e1, e2);//////////////////////////////////////
 				int testing_function = point_state.find_triangle(point_list[6]);
 				printf("hi");
+
+				find_shortest_path_tree(point_list.size()-2);
+				
 			}
 			glutPostRedisplay();
 		}

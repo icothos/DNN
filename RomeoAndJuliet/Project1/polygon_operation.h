@@ -17,6 +17,7 @@ vector<vector<int>> polygon_list;
 vector<vector<int>> outer_polygon_list;
 vector<vector<int>> triangle_list;
 vector<Edge> diagonal_list;
+vector<Edge> diagonal_with_edge_list;
 vector<Edge> outer_edge_list;
 vector<Edge> outer_diagonal_list;
 vector<Edge *> null_edge_list;

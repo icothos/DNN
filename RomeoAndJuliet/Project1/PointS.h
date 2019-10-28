@@ -9,7 +9,7 @@
 
 #define PI 3.1415926535897931
 
-PointS point_state;
+
 
 point_type max_y;
 point_type min_y;
@@ -371,3 +371,5 @@ public:
 		return ret;
 	}
 };
+
+PointS point_state;

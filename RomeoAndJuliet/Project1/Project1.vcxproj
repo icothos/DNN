@@ -42,7 +42,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -103,12 +103,12 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>NDEBUG;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Spock_the_Wizard\Desktop\DNN-master\DNN-master\dnn\spath_spolygon\Project1\Romeo-Juliet\Project1\include;C:\Program Files %28x86%29\Windows Kits\10\Include\10.0.16299.0\ucrt\sys;C:\Users\Spock the Wizard\Desktop\Project1\Project1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\include;C:\Users\Spock_the_Wizard\Desktop\DNN-master\DNN-master\dnn\spath_spolygon\Project1\Romeo-Juliet\Project1\include;C:\Program Files %28x86%29\Windows Kits\10\Include\10.0.16299.0\ucrt\sys;C:\Users\Spock the Wizard\Desktop\Project1\Project1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>C:\Users\Spock the Wizard\Desktop\Project1\Project1\lib\x64;C:\Users\Spock_the_Wizard\Desktop\DNN-master\DNN-master\dnn\spath_spolygon\Project1\Romeo-Juliet\Project1\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\lib\x64;C:\Users\Spock the Wizard\Desktop\Project1\Project1\lib\x64;C:\Users\Spock_the_Wizard\Desktop\DNN-master\DNN-master\dnn\spath_spolygon\Project1\Romeo-Juliet\Project1\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>freeglut.lib;glew32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

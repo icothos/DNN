@@ -5,7 +5,7 @@
 #include "Tree.h"
 #include "PointS.h"
 
-using namespace std;
+//using namespace std;
 
 
 class SPTnode

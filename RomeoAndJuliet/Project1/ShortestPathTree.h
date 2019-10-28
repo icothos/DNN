@@ -25,18 +25,24 @@ public:
 		parent = NULL;
 		children = vector<SPTnode*>();
 	}
+	SPTnode(int point_num)
+	{
+		vertexID = point_num;
+		parent = NULL;
+		children = vector<SPTnode*>();
+	}
 	SPTnode(int _vertexID, SPTnode* _parent)
 	{
 		vertexID = _vertexID;
 		parent = _parent;
 		children = vector<SPTnode*>();
-	}
+	}/*
 	SPTnode(int _vertexID, int _parent)
 	{
 		vertexID = _vertexID;
-		parent = find_node(_parent);
+		parent = spt.get_node(_parent);
 		children = vector<SPTnode*>();
-	}
+	}*/
 	/* Searches all its descendents and returns a pointer to the SPT node with the corresponding vertex ID */
 	SPTnode* find_node(int ID)
 	{
@@ -64,6 +70,9 @@ public:
 		children.push_back(new_child);
 	}
 };
+
+
+
 class SPT
 {
 	SPTnode* root;
@@ -90,12 +99,18 @@ public:
 			return -1;
 		}
 		
+		if (find(components.begin(), components.end(), leaf) != components.end())
+			return -1;
 		//now we can be sure that the parent is a node in the tree!!
 		
 		//add the leaf to components list and set the parent
-		SPTnode new_leaf = SPTnode(leaf, parent);
-		new_leaf.get_parent()->add_child(&new_leaf);
+		
+		SPTnode* parent_node = get_node(parent);
+		SPTnode* new_leaf = new SPTnode(leaf,parent_node);
+		parent_node->add_child(new_leaf);
 
+		components.push_back(leaf);
+		
 		return leaf;
 	}
 	/* Returns the SPT node pointer with the vertex ID */
@@ -115,7 +130,14 @@ public:
 		//will return null for the root
 		return node->get_parent();	
 	}
+	void set_root(int _root)
+	{
+		root = new SPTnode(_root);
+		components.push_back(_root);
+	}
 };
+
+SPT spt = SPT();
 
 
 class Funnel
@@ -165,6 +187,14 @@ public:
 		vertex_list.push_back(apex);
 		vertex_list.push_back(_beta);
 	}
+	Funnel(int _apex, vector<int> _vertex_list)
+	{
+		apex = _apex;
+		alpha = _vertex_list.front();
+		beta = _vertex_list.back();
+		diag = find_diagonal_index(alpha, beta);
+		vertex_list = _vertex_list;
+	}
 	int get_apex() { return apex; }
 	int get_alpha() { return alpha; }
 	int get_beta() { return beta; }
@@ -172,7 +202,7 @@ public:
 	vector<int> get_vertex_list() { return vertex_list; }
 };
 
-SPT spt = SPT();
+
 
 void find_shortest_path_tree(int);
 void split_funnel(Funnel*);
@@ -187,6 +217,7 @@ void find_shortest_path_tree(int s)
 	//일단 find_all_triangles
 
 	Point root = point_list[s];//probably index point_list.size()-2
+	spt.set_root(s);
 	int triangle_with_s_id = point_state.find_triangle(root);
 
 	vector<int> triangle_with_s = polygon_list[triangle_with_s_id];
@@ -209,7 +240,7 @@ void find_shortest_path_tree(int s)
 /*  Chooses the next v on the other side of the diagonal compared to the apex in the funnel
 	Returns the vertex ID of the chosen v
 	Returns -1 on error */
-int choose_v(Funnel* funnel)
+int choose_v(Funnel * funnel)
 {
 	int alpha = funnel->get_alpha();
 	int beta = funnel->get_beta();
@@ -262,6 +293,36 @@ int choose_v(Funnel* funnel)
 	}
 }
 
+bool in_between(int prev, int curr, int next, int v)
+{
+	//cur->prev, cur->next 사이 angle 계산
+
+	//둔각인 경우 (curr가 apex일때, 가장 처음 경우)
+	//alpha side의 벡터를 180도 회전한다....
+
+	//curr->v 이루는 각도 계산 후 1-3.3-2의 부호 비교....
+	//같은 부호이면 영역 밖이라는 뜻이므로 return false
+	//다른 부호이면 영역 안이라는 뜻이므로 return true
+	float check_first = calculate_angle_between(curr, prev, next);
+
+	float angle_prev = calculate_angle(prev, curr);
+	float angle_next = calculate_angle(curr, next);
+	if (abs(angle_prev - angle_next) >= PI / 2) //둔각인 경우 - curr가 apex일때
+	{
+		float v_prev = calculate_angle_between(curr, prev, v);
+		float next_v = calculate_angle_between(curr, v, next);
+
+		if (v_prev * next_v > 0)
+			return true;
+		else return false;
+	}
+	
+	float angle_v = calculate_angle(curr, v);
+
+	if ((angle_next - angle_v) * (angle_v - angle_prev) > 0)
+		return true;
+	else return false;
+}
 int compute_pred(Funnel* funnel, int v)
 {
 	int apex = funnel->get_apex();
@@ -281,10 +342,13 @@ int compute_pred(Funnel* funnel, int v)
 	alpha_list.insert(alpha_list.end(), vertex_list.begin(), apex_ptr);
 	alpha_list.push_back(apex);
 	reverse(alpha_list.begin(), alpha_list.end());
-	//beta_list.push_back(apex);
 	beta_list.insert(beta_list.end(), apex_ptr, vertex_list.end());
 
-	//apex~v 선분과 left, right chain의 첫 edge가 이루는 각도 계산하는 부분이 필요함!!
+	//when v's predecessor is the apex (apex directly reachable from v)
+	if (in_between(beta_list.at(1), alpha_list.front(), alpha_list.at(1), v))
+		return apex;
+	
+	//predecessor is a vertex from alpha_list or beta list
 	
 	float angle_alpha = calculate_angle_between(apex, alpha_list[1], v);
 	float angle_beta = calculate_angle_between(apex, beta_list[1], v);
@@ -304,9 +368,21 @@ int compute_pred(Funnel* funnel, int v)
 	}
 
 	vector<int>::iterator predecessor = chain.begin();
-	predecessor++;
+	//predecessor++;
 
+	while ((predecessor + 2) != chain.end())
+	{
+		if (in_between(*predecessor, *(predecessor + 1), *(predecessor + 2), v))
+		{
+			return *(predecessor + 1);
+		}
 
+		predecessor++;
+	}
+	
+	//when the predecessor is the last element
+	return *predecessor;
+	/*
 	if (angle_alpha + angle_beta > 0)//they are both tilted to the right
 	{
 		while (predecessor +1 != chain.end())
@@ -327,8 +403,9 @@ int compute_pred(Funnel* funnel, int v)
 			predecessor++;
 		}
 	}
-
+	
 	return *predecessor;
+	*/
 }
 
 void split_funnel(Funnel* funnel)
@@ -345,7 +422,31 @@ void split_funnel(Funnel* funnel)
 
 	int pred = compute_pred(funnel, v);
 	
-	printf("%d\n", pred);
+	//add pred info to tree
+	spt.set_pred(v, pred);
+
+	vector<int> chain = funnel->get_vertex_list();
+	vector<int>::iterator pred_ptr = find(chain.begin(), chain.end(), pred);
+	vector<int> first_chain;
+	vector<int> second_chain;
+
+	if (find(chain.begin(), pred_ptr, apex) != chain.end())
+	{
+		reverse(chain.begin(), chain.end());
+	}
+	pred_ptr = find(chain.begin(), chain.end(), pred);
+	first_chain.insert(first_chain.end(), chain.begin(), pred_ptr);
+	first_chain.push_back(pred);
+	first_chain.push_back(v);
+	second_chain.push_back(v);
+	second_chain.insert(second_chain.end(), pred_ptr, chain.end());
+
+	Funnel* first = new Funnel(pred, first_chain);
+	Funnel* second = new Funnel(apex, second_chain);
+
+	split_funnel(first);
+	split_funnel(second);
+
 }
 
 int find_diagonal_index(int first, int second)

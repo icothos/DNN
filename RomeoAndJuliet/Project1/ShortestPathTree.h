@@ -368,13 +368,13 @@ int compute_pred(Funnel* funnel, int v)
 	}
 
 	vector<int>::iterator predecessor = chain.begin();
-	//predecessor++;
+	predecessor++;
 
-	while ((predecessor + 2) != chain.end())
+	while ((predecessor + 1) != chain.end())
 	{
-		if (in_between(*predecessor, *(predecessor + 1), *(predecessor + 2), v))
+		if (in_between(*(predecessor-1), *predecessor, *(predecessor + 1), v))
 		{
-			return *(predecessor + 1);
+			return *(predecessor);
 		}
 
 		predecessor++;
@@ -442,10 +442,11 @@ void split_funnel(Funnel* funnel)
 	second_chain.insert(second_chain.end(), pred_ptr, chain.end());
 
 	Funnel* first = new Funnel(pred, first_chain);
-	Funnel* second = new Funnel(apex, second_chain);
-
 	split_funnel(first);
-	split_funnel(second);
+
+	Funnel* second = new Funnel(apex, second_chain);
+	if(pred!=alpha && pred !=beta)
+		split_funnel(second);
 
 }
 

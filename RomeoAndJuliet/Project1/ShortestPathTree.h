@@ -8,8 +8,6 @@
 #include "polygon_operation.h"
 using namespace std;
 
-
-
 int find_diagonal_index(int first, int second);
 
 class SPTnode
@@ -36,13 +34,7 @@ public:
 		vertexID = _vertexID;
 		parent = _parent;
 		children = vector<SPTnode*>();
-	}/*
-	SPTnode(int _vertexID, int _parent)
-	{
-		vertexID = _vertexID;
-		parent = spt.get_node(_parent);
-		children = vector<SPTnode*>();
-	}*/
+	}
 	/* Searches all its descendents and returns a pointer to the SPT node with the corresponding vertex ID */
 	SPTnode* find_node(int ID)
 	{
@@ -135,6 +127,13 @@ public:
 		root = new SPTnode(_root);
 		components.push_back(_root);
 	}
+	bool is_set(int id)
+	{
+		if (find(components.begin(), components.end(), id) == components.end())
+			return false;
+		else
+			return true;
+	}
 };
 
 SPT spt = SPT();
@@ -202,127 +201,93 @@ public:
 	vector<int> get_vertex_list() { return vertex_list; }
 };
 
-
-
 void find_shortest_path_tree(int);
 void split_funnel(Funnel*);
-
 
 /*constructs the shortest path tree 'SPT' with root as 's'*/
 void find_shortest_path_tree(int s)
 {
-	//find the triangle that s is included in and divide it into three!!
-	//we can get the candidates... but how do we get the nearby ones? -> at least one of them is not a "proper triangle"
-	//looking for a method to check this
-	//일단 find_all_triangles
-
 	Point root = point_list[s];//probably index point_list.size()-2
 	spt.set_root(s);
 	int triangle_with_s_id = point_state.find_triangle(root);
 
 	vector<int> triangle_with_s = polygon_list[triangle_with_s_id];
+
+	//set predecessor of each vertex!
+	spt.set_pred(triangle_with_s[0], s);
+	spt.set_pred(triangle_with_s[1], s);
+	spt.set_pred(triangle_with_s[2], s);
+
 	//divide the triangle into three
 	for (int i = 0; i < 3; i++)
 	{
 		Funnel* temp = new Funnel(s, triangle_with_s[i % 3], triangle_with_s[(i + 1) % 3]);
-
-		//set predecessor of each vertex!
-		spt.set_pred(triangle_with_s[i % 3], s);
-		spt.set_pred(triangle_with_s[(i + 1) % 3], s);
-
 		//call split
 		split_funnel(temp);
 	}
 
-
+	printf("we have the spt set\n");
 }
 
-/*  Chooses the next v on the other side of the diagonal compared to the apex in the funnel
-	Returns the vertex ID of the chosen v
-	Returns -1 on error */
-int choose_v(Funnel * funnel)
+int choose_v(Funnel* funnel)
 {
 	int alpha = funnel->get_alpha();
 	int beta = funnel->get_beta();
-	int apex = funnel->get_apex();
+	int diag = funnel->get_diag();
 
-	//when there exists a valid Edge with an s_node set...
-	if (funnel->get_diag() != -1)
+	if (diag == -1)
+		return -1;
+
+	//array of two indexes of triangles in polygon_list that are adjacent to the diagonal
+	int* triangles = diagonal_list[diag].get_triangle();
+	int v = -1;
+	if (triangles[0] == 1 || triangles[1] == 1)
+		printf("gotcha\n");
+	for (int i = 0; i < 2; i++)
 	{
-		SNode* diagonal = diagonal_list[funnel->get_diag()].get_SNode();
-		SNode* child = NULL;
-		if (diagonal != NULL)
+		int v_cand;
+		for (int j = 0; j < 3; j++)
 		{
-			//get diagonal's chliren....
-			//locate in which of the child's cell the apex is located...
-			//choose a vertex v in the other cell
-
-			bool included_in_left_child = check_inclusive_id(diagonal->get_left_children()->get_polygon_with_edge(), apex);
-			bool included_in_right_child = check_inclusive_id(diagonal->get_right_children()->get_polygon_with_edge(), apex);
-
-			if (included_in_left_child)
+			int vertex = polygon_list[triangles[i]][j];
+			if (vertex != alpha && vertex != beta)
 			{
-				//choose a vertex v in the right child cell that is not alpha nor beta
-				child = diagonal->get_right_children();
+				v_cand = vertex;
+				break;
 			}
-			else if (included_in_right_child)
-			{
-				//choose a vertex v in the left child cell that is not alpha nor beta
-				child = diagonal->get_left_children();
-			}
-			else
-			{
-				//shit.. this should not be happening
-				printf("apex is included in neither two children\n");
-			}
-
-			vector<int> next_v_candidates = diag_id_to_point_id(child->get_polygon_with_edge());
-			for (int i = 0; i < next_v_candidates.size(); i++)
-			{
-				if (next_v_candidates[i] != alpha && next_v_candidates[i] != beta)
-				{
-					return next_v_candidates[i];
-				}
-			}
-			//shouldn't reach here
-			return -1;
 		}
-		else {
-			printf("Shortest Path Tree!! SNode was not correctly set in the diagonal!!\n");
+		
+		if (spt.is_set(v_cand) == false)
+		{
+			v = v_cand;
+			break;
 		}
 	}
+
+	return v;
 }
 
+/* returns true iff vector (curr, v) lies between vectors (prev, curr) and (curr, next)
+(the smaller side of the pie)
+*/
 bool in_between(int prev, int curr, int next, int v)
 {
-	//cur->prev, cur->next 사이 angle 계산
+	float prev_curr = calculate_angle(prev, curr);
+	float curr_next = calculate_angle(curr, next);
+	float curr_v = calculate_angle(curr, v);
 
-	//둔각인 경우 (curr가 apex일때, 가장 처음 경우)
-	//alpha side의 벡터를 180도 회전한다....
-
-	//curr->v 이루는 각도 계산 후 1-3.3-2의 부호 비교....
-	//같은 부호이면 영역 밖이라는 뜻이므로 return false
-	//다른 부호이면 영역 안이라는 뜻이므로 return true
-	float check_first = calculate_angle_between(curr, prev, next);
-
-	float angle_prev = calculate_angle(prev, curr);
-	float angle_next = calculate_angle(curr, next);
-	if (abs(angle_prev - angle_next) >= PI / 2) //둔각인 경우 - curr가 apex일때
-	{
-		float v_prev = calculate_angle_between(curr, prev, v);
-		float next_v = calculate_angle_between(curr, v, next);
-
-		if (v_prev * next_v > 0)
-			return true;
-		else return false;
-	}
+	float diff_first = calculate_angle_between(curr, next, v);
+	float diff_second = curr_v - prev_curr;
 	
-	float angle_v = calculate_angle(curr, v);
+	if (diff_second > PI)
+		diff_second -= 2 * PI;
+	else if (diff_second < -PI)
+		diff_second += 2 * PI;
 
-	if ((angle_next - angle_v) * (angle_v - angle_prev) > 0)
+	if (diff_first*diff_second >= 0)
 		return true;
 	else return false;
 }
+
 int compute_pred(Funnel* funnel, int v)
 {
 	int apex = funnel->get_apex();
@@ -334,6 +299,8 @@ int compute_pred(Funnel* funnel, int v)
 		printf("funnel's vertex list should not be empty!\n");
 		exit(234);
 	}
+	else if (vertex_list.size() == 2)
+		return apex;
 
 	vector<int>::iterator apex_ptr = find(vertex_list.begin(), vertex_list.end(), apex);
 	vector<int> alpha_list, beta_list;
@@ -344,28 +311,18 @@ int compute_pred(Funnel* funnel, int v)
 	reverse(alpha_list.begin(), alpha_list.end());
 	beta_list.insert(beta_list.end(), apex_ptr, vertex_list.end());
 
-	//when v's predecessor is the apex (apex directly reachable from v)
-	if (in_between(beta_list.at(1), alpha_list.front(), alpha_list.at(1), v))
+	float angle_alpha = calculate_angle_between(apex, v, alpha_list[1]);
+	float angle_beta = calculate_angle_between(apex, v, beta_list[1]);
+
+	//the case that the apex is the predecessor -> different signature (or zero)
+	if (angle_alpha*angle_beta <= 0)
 		return apex;
 	
-	//predecessor is a vertex from alpha_list or beta list
-	
-	float angle_alpha = calculate_angle_between(apex, alpha_list[1], v);
-	float angle_beta = calculate_angle_between(apex, beta_list[1], v);
+	//not the case that the apex is the predecessor
 	vector<int> chain;
-	if (angle_alpha*angle_beta < 0)//different booho ///this we need to change!!!!!1////////////////////////
-	{
-		return apex;
-	}
-	else
-	{
-		if (abs(angle_alpha) > abs(angle_beta))
-		{
-			chain = beta_list;
-		}
-		else
-			chain = alpha_list;
-	}
+
+	//select alpha / beta so that the chain is closer to v
+	chain = (abs(angle_alpha) > abs(angle_beta)) ? beta_list : alpha_list;
 
 	vector<int>::iterator predecessor = chain.begin();
 	predecessor++;
@@ -373,40 +330,14 @@ int compute_pred(Funnel* funnel, int v)
 	while ((predecessor + 1) != chain.end())
 	{
 		if (in_between(*(predecessor-1), *predecessor, *(predecessor + 1), v))
-		{
 			return *(predecessor);
-		}
-
 		predecessor++;
 	}
 	
 	//when the predecessor is the last element
 	return *predecessor;
-	/*
-	if (angle_alpha + angle_beta > 0)//they are both tilted to the right
-	{
-		while (predecessor +1 != chain.end())
-		{
-			float angle = calculate_angle_between(*predecessor, *(predecessor + 1), v);
-			if (angle < 0)
-				break;
-			predecessor++;
-		}
-	}
-	else
-	{
-		while (predecessor +1 != chain.end())
-		{
-			float angle = calculate_angle_between(*predecessor, *(predecessor + 1), v);
-			if (angle > 0)
-				break;
-			predecessor++;
-		}
-	}
-	
-	return *predecessor;
-	*/
 }
+
 
 void split_funnel(Funnel* funnel)
 {
@@ -419,22 +350,21 @@ void split_funnel(Funnel* funnel)
 		return;
 
 	int v = choose_v(funnel);
-
+	if (v == -1)//cannot choose v
+		return;
 	int pred = compute_pred(funnel, v);
-	
 	//add pred info to tree
 	spt.set_pred(v, pred);
 
 	vector<int> chain = funnel->get_vertex_list();
 	vector<int>::iterator pred_ptr = find(chain.begin(), chain.end(), pred);
-	vector<int> first_chain;
-	vector<int> second_chain;
+	vector<int> first_chain , second_chain;
 
-	if (find(chain.begin(), pred_ptr, apex) != chain.end())
+	if (find(chain.begin(), pred_ptr, apex) != pred_ptr)
 	{
 		reverse(chain.begin(), chain.end());
+		pred_ptr = find(chain.begin(), chain.end(), pred);
 	}
-	pred_ptr = find(chain.begin(), chain.end(), pred);
 	first_chain.insert(first_chain.end(), chain.begin(), pred_ptr);
 	first_chain.push_back(pred);
 	first_chain.push_back(v);
@@ -442,12 +372,29 @@ void split_funnel(Funnel* funnel)
 	second_chain.insert(second_chain.end(), pred_ptr, chain.end());
 
 	Funnel* first = new Funnel(pred, first_chain);
-	split_funnel(first);
-
 	Funnel* second = new Funnel(apex, second_chain);
-	if(pred!=alpha && pred !=beta)
-		split_funnel(second);
 
+	if (pred == alpha || pred == beta)
+	{		
+		if (first_chain.size() == 2)//second_chain should have the origin apex
+		{
+			first = new Funnel(pred, first_chain);
+			second = new Funnel(apex, second_chain);
+		}
+		else if (second_chain.size() == 2)//first_chain should have the original apex
+		{
+			first = new Funnel(apex, first_chain);
+			second = new Funnel(pred, second_chain);
+		}
+		else {
+			printf("this doesn't make sense\n");
+			exit(-10);
+		}
+	}
+
+	split_funnel(first);
+	split_funnel(second);
+	return;
 }
 
 int find_diagonal_index(int first, int second)

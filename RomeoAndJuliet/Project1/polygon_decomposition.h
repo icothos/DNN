@@ -306,6 +306,7 @@ void dual_tree(int v_num) {
 		int t2 = two_triangles[1];
 		t_list[t1].add_adjacent_triangle(t2);
 		t_list[t2].add_adjacent_triangle(t1);
+		diagonal_list[i].set_triangle(t1, t2);
 	}
 	int head = -1;
 	for (int i = 0; i < (int)polygon_list.size(); i++) {

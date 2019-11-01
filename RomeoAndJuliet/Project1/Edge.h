@@ -59,13 +59,18 @@ public:
 	point_type get_len() {
 		return len;
 	}
-	int set_traingle(int t1, int t2) {
-		if (t1 < t2) {
+	void set_triangle(int t1, int t2) {
+		if (t1 <= t2) {
 			triangle[0] = t1;
 			triangle[1] = t2;
 		}
+		else
+		{ 
+			triangle[0] = t2;
+			triangle[1] = t1;
+		}
 	}
-	int * get_traingle() {
+	int * get_triangle() {
 		return triangle;
 	}
 	int get_origin() { return origin; }

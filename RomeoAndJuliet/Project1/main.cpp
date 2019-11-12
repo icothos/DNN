@@ -750,11 +750,15 @@ void add_test_point(int button, int state, int x, int y) {
 				int testing_function = point_state.find_triangle(point_list[6]);
 				printf("hi");
 
+				SPT* spt = new SPT(point_list.size() - 2, point_list.size() - 1);
+				vector<int> spath = spt->find_shortest_path_default();
+				/*
 				SPT* spt = new SPT();
 				spt->compute_shortest_path_tree(point_list.size() - 2);
 				vector<int> spath = spt->find_shortest_path(point_list.size() - 1);
 
 				printf("heeehee path is ready\n");
+				*/
 			}
 			glutPostRedisplay();
 		}

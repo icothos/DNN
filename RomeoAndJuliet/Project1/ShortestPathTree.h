@@ -129,7 +129,7 @@ public:
 			//if all the children have no match, return an empty vector
 			for (int i = 0; i < children.size(); i++)
 			{
-				child = find_node_save_path(path, ID);
+				child = children[i]->find_node_save_path(path, ID);
 				if (!child.empty())
 				{
 					return child;
@@ -163,17 +163,27 @@ class SPT
 {
 	SPTnode* root;
 	vector<int> components;	//maintains all the point IDs in the tree
-
+	int s;
+	int t;
+	int t_tri_num;
+	vector<int> t_tri_vertices;
+	int t_pred;
 public:
 	SPT()
 	{
 		root = NULL;
 		components = vector<int>();
 	}
-	SPT(int _root)
+	SPT(int _s,int _t) //must be called after decomposition is complete
 	{
-		root = new SPTnode(_root, NULL);
-		components.push_back(_root);
+		root = new SPTnode(_s, NULL);
+		components.push_back(_s);
+		t = _t;
+		s = _s;
+		Point point_t = point_list[t];
+		t_tri_num = point_state.find_triangle(point_t);
+		t_tri_vertices = polygon_list[t_tri_num];
+		t_pred = -1;
 	}
 	/*  Add the leaf as a member of the tree and link it to the parent node and return the vertex ID of the leaf
 		If the parent is not part of the tree in the first place, return -1 */
@@ -231,12 +241,11 @@ public:
 	bool get_size() {
 		return components.size();
 	}
-	bool compute_shortest_path_tree(int s)
+	bool compute_shortest_path_tree()
 	{
-		Point root = point_list[s];//probably index point_list.size()-2
-		set_root(s);
-		int triangle_with_s_id = point_state.find_triangle(root);
-
+		//Point root = point_list[s];//probably index point_list.size()-2
+		//set_root(s);
+		int triangle_with_s_id = point_state.find_triangle(point_list[s]);
 		vector<int> triangle_with_s = polygon_list[triangle_with_s_id];
 
 		//set predecessor of each vertex!
@@ -254,8 +263,48 @@ public:
 
 		return components.size();
 	}
-	vector<int> find_shortest_path(int t)
+	vector<int> find_shortest_path_default()
 	{
+		return find_shortest_path(t);
+	}
+	vector<int> find_shortest_path(int _t)
+	{
+		compute_shortest_path_tree();
+		vector<int> path;
+
+		if (is_set(_t)) // t is a polygon vertex, not a test point
+		{
+			path = root->find_node_save_path(path, _t);
+		}
+		else
+		{
+			printf("no such t in the shortest path tree\n");
+			exit(39);
+		}
+		/*
+		else {//the destination test point
+			if (t_pred == -1)
+			{
+				printf("predecessor of t was not successfully computed! Check the `choose_v function\n");
+				exit(27);
+			}
+			else
+			{
+				path = root->find_node_save_path(path, t_pred);
+				path.push_back(t);
+			}
+		}*/
+
+		//basic validity check
+		if (path.front() == s && path.back() == _t)
+			return path;
+		else
+		{
+			printf("error! not a valid shortest path\n");
+			exit(103);
+		}
+
+		/*
 		vector<int> path;
 
 		if (is_set(t))
@@ -268,11 +317,7 @@ public:
 			Point dest = point_list[t];
 			int triangle_num = point_state.find_triangle(dest);
 			vector<int> tri_vertex = polygon_list[triangle_num];
-			/*
-			for (int i = 0; i<3; i++)
-			{
-				
-			}*/
+			
 
 			//find the closest to the root......
 
@@ -286,7 +331,7 @@ public:
 		{
 			printf("what is this\n");
 			return vector<int>();
-		}
+		}*/
 	}
 	void split_funnel(Funnel* funnel)
 	{
@@ -301,6 +346,15 @@ public:
 		int v = choose_v(funnel);
 		if (v == -1)//cannot choose v
 			return;
+
+		/*
+		if (find(t_tri_vertices.begin(), t_tri_vertices.end(), alpha) != t_tri_vertices.end() &&
+			find(t_tri_vertices.begin(), t_tri_vertices.end(), beta) != t_tri_vertices.end() &&
+			find(t_tri_vertices.begin(), t_tri_vertices.end(), v) != t_tri_vertices.end())
+		{
+			t_pred = compute_pred(funnel, t);
+		}*/
+
 		int pred = compute_pred(funnel, v);
 		//add pred info to tree
 		set_pred(v, pred);
@@ -345,6 +399,8 @@ public:
 		split_funnel(second);
 		return;
 	}
+	/* chooses the next vertex to expand 
+		also calculates the predecessor of t if possible*/
 	int choose_v(Funnel* funnel)
 	{
 		int alpha = funnel->get_alpha();
@@ -356,12 +412,14 @@ public:
 
 		//array of two indexes of triangles in polygon_list that are adjacent to the diagonal
 		int* triangles = diagonal_list[diag].get_triangle();
+		int selected_tri_index = -1;
 		int v = -1;
 		if (triangles[0] == 1 || triangles[1] == 1)
 			printf("gotcha\n");
 		for (int i = 0; i < 2; i++)
 		{
 			int v_cand;
+			selected_tri_index = i;
 			for (int j = 0; j < 3; j++)
 			{
 				int vertex = polygon_list[triangles[i]][j];
@@ -378,6 +436,13 @@ public:
 				break;
 			}
 		}
+
+		if (triangles[selected_tri_index] == t_tri_num)
+		{
+			t_pred = compute_pred(funnel, t);
+			set_pred(t, t_pred);
+		}
+
 		return v;
 	}
 };

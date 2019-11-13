@@ -281,20 +281,6 @@ public:
 			printf("no such t in the shortest path tree\n");
 			exit(39);
 		}
-		/*
-		else {//the destination test point
-			if (t_pred == -1)
-			{
-				printf("predecessor of t was not successfully computed! Check the `choose_v function\n");
-				exit(27);
-			}
-			else
-			{
-				path = root->find_node_save_path(path, t_pred);
-				path.push_back(t);
-			}
-		}*/
-
 		//basic validity check
 		if (path.front() == s && path.back() == _t)
 			return path;
@@ -303,35 +289,6 @@ public:
 			printf("error! not a valid shortest path\n");
 			exit(103);
 		}
-
-		/*
-		vector<int> path;
-
-		if (is_set(t))
-		{
-			path = root->find_node_save_path(path, t);
-		}
-		else //the second test point input
-		{
-			//find the triangle t is in
-			Point dest = point_list[t];
-			int triangle_num = point_state.find_triangle(dest);
-			vector<int> tri_vertex = polygon_list[triangle_num];
-			
-
-			//find the closest to the root......
-
-			//push_back t
-
-		}
-		
-		if (path.front() == root->get_id() && path.back() == t)
-			return path;
-		else
-		{
-			printf("what is this\n");
-			return vector<int>();
-		}*/
 	}
 	void split_funnel(Funnel* funnel)
 	{
@@ -346,14 +303,6 @@ public:
 		int v = choose_v(funnel);
 		if (v == -1)//cannot choose v
 			return;
-
-		/*
-		if (find(t_tri_vertices.begin(), t_tri_vertices.end(), alpha) != t_tri_vertices.end() &&
-			find(t_tri_vertices.begin(), t_tri_vertices.end(), beta) != t_tri_vertices.end() &&
-			find(t_tri_vertices.begin(), t_tri_vertices.end(), v) != t_tri_vertices.end())
-		{
-			t_pred = compute_pred(funnel, t);
-		}*/
 
 		int pred = compute_pred(funnel, v);
 		//add pred info to tree
@@ -442,12 +391,9 @@ public:
 			t_pred = compute_pred(funnel, t);
 			set_pred(t, t_pred);
 		}
-
 		return v;
 	}
 };
-
-
 
 /* returns true iff vector (curr, v) lies between vectors (prev, curr) and (curr, next)
 (the smaller side of the pie)

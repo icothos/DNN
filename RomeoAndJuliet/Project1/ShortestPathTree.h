@@ -152,6 +152,10 @@ public:
 	{
 		return parent;
 	}
+	vector<SPTnode*> get_children()
+	{
+		return children;
+	}
 	/* Adds the pointer to the leaf SPT node to in the children list of the current node */
 	void add_child(SPTnode* new_child)
 	{

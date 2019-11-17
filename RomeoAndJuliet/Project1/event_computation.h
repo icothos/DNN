@@ -3,7 +3,7 @@
 #include<iostream>
 #include<vector>
 #include"Point.h"
-#include "ShortestPathTree.h"
+#include "ShortestPathTree.h" //includes polygon_operation.h
 
 #define INT_MAX 100000000
 using namespace std;
@@ -105,17 +105,8 @@ void EVENTS::compute_path_events()
 	}
 }
 
-/* noramlizes the input angle into a float ranging pi~-pi */
-float normalize_angle(float angle)
-{
-	if (angle > PI)
-		return angle - 2 * PI;
-	if (angle < -PI)
-		return angle + 2 * PI;
 
-	return angle;
-	
-}
+/* determines whether the line (*not vector) (CUR, P) is tangent to the path (PREV~CUR~NEXT) at vertex CUR */
 bool is_tangent(int prev, int cur, int next, int p)
 {
 	float first = calculate_angle(prev, cur);

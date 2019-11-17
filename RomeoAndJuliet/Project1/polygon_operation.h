@@ -816,3 +816,14 @@ void make_big_triangle() {
 	outer_diagonal_list.push_back(e);
 
 }
+
+/* noramlizes the input angle into a float ranging pi~-pi */
+float normalize_angle(float angle)
+{
+	if (angle > PI)
+		return angle - 2 * PI;
+	if (angle < -PI)
+		return angle + 2 * PI;
+
+	return angle;
+}

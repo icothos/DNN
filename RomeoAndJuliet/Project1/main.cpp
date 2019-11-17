@@ -16,6 +16,7 @@
 #include <sstream>
 #include "hourglass_operation.h"
 #include "ShortestPathTree.h"
+#include "event_computation.h"
 
 #define NULL_HELPER -1
 #define PI 3.1415926535897931
@@ -750,15 +751,18 @@ void add_test_point(int button, int state, int x, int y) {
 				int testing_function = point_state.find_triangle(point_list[6]);
 				printf("hi");
 
-				SPT* spt = new SPT(point_list.size() - 2, point_list.size() - 1);
-				vector<int> spath = spt->find_shortest_path_default();
-				/*
-				SPT* spt = new SPT();
-				spt->compute_shortest_path_tree(point_list.size() - 2);
-				vector<int> spath = spt->find_shortest_path(point_list.size() - 1);
+				SPT* spt_s = new SPT(point_list.size() - 2, point_list.size() - 1);
+				vector<int> spath = spt_s->find_shortest_path_default();
 
-				printf("heeehee path is ready\n");
-				*/
+				SPT* spt_t = new SPT(point_list.size() - 1, point_list.size() - 2);
+				vector<int> tpath = spt_t->find_shortest_path_default();
+
+				EVENTS* events = new EVENTS(spath);
+				events->compute_path_events();
+				events->compute_boundary_events(spt_s,spt_t);
+
+				printf("done computing the boundary and path events!\n");
+				
 			}
 			glutPostRedisplay();
 		}

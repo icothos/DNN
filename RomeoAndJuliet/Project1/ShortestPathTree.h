@@ -6,6 +6,7 @@
 #include "PointS.h"
 #include "hourglass_operation.h"
 #include "polygon_operation.h"
+
 using namespace std;
 
 int find_diagonal_index(int first, int second);

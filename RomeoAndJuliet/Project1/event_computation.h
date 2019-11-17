@@ -29,18 +29,25 @@ float compute_slope(int _p1, int _p2)
 
 	return (float)(y1 - y2) / (x1 - x2);
 }
+enum event_type {
+	PATH,
+	BOUNDARY,
+	BEND
+};
 class LOS {
 	int id;
 	int endpoint1;
 	int endpoint2;
 	float slope;
+	event_type type;
 	int rotation_vertex;
 public:
-	LOS(int _id, int p1, int p2, int rot_vertex)
+	LOS(int _id, int p1, int p2, int rot_vertex,event_type _type)
 	{
 		id = _id;
 		endpoint1 = p1;
 		endpoint2 = p2;
+		type = _type;
 		rotation_vertex = rot_vertex;
 		//slope calculation
 		slope = compute_slope(p1, p2);
@@ -65,7 +72,7 @@ public:
 
 class EVENTS {
 	int next_line_id;
-	vector<vector<LOS*>> events;
+	vector<vector<LOS*>> queue;
 	vector<int> shortest_path;
 public:
 	EVENTS(vector<int> _shortest_path)
@@ -74,7 +81,7 @@ public:
 		shortest_path = _shortest_path;
 		for (int i = 0; i < shortest_path.size(); i++)
 		{
-			events.push_back(vector<LOS*>());
+			queue.push_back(vector<LOS*>());
 		}
 	}
 	vector<int> get_shortest_path()
@@ -82,7 +89,7 @@ public:
 		return shortest_path;
 	}
 	void compute_path_events();
-	void compute_boundary_events(SPT* spt);
+	void compute_boundary_events(SPT* spt_s, SPT* spt_t);
 	void compute_bend_events();
 };
 
@@ -92,19 +99,52 @@ void EVENTS::compute_path_events()
 
 	for (int i = 0; i < shortest_path.size()-1; i++)
 	{
-		LOS* los = new LOS(next_line_id++, shortest_path[i], shortest_path[i + 1], shortest_path[i + 1]);
+		LOS* los = new LOS(next_line_id++, shortest_path[i], shortest_path[i + 1], shortest_path[i + 1], PATH);
 
-		events[i].push_back(los);
+		queue[i].push_back(los);
 	}
 }
 
-void EVENTS::compute_boundary_events(SPT* spt)
+/* noramlizes the input angle into a float ranging pi~-pi */
+float normalize_angle(float angle)
+{
+	if (angle > PI)
+		return angle - 2 * PI;
+	if (angle < -PI)
+		return angle + 2 * PI;
+
+	return angle;
+	
+}
+bool is_tangent(int prev, int cur, int next, int p)
+{
+	float first = calculate_angle(prev, cur);
+	float second = calculate_angle(cur, next);
+
+	float p_cur = calculate_angle(p, cur);
+	float cur_p = calculate_angle(cur, p);
+
+	float angle1 = normalize_angle(first - p_cur);
+	float angle2 = normalize_angle(p_cur - second);
+
+	if (angle1*angle2 > 0)
+		return true;
+	
+	angle1 = normalize_angle(first - cur_p);
+	angle2 = normalize_angle(cur_p - second);
+
+	if(angle1*angle2 > 0)
+		return true;
+	
+	return false;
+}
+void EVENTS::compute_boundary_events(SPT* spt_s, SPT* spt_t)
 {
 	//search the tree for candidates 
-	for (int i = 0; i < shortest_path.size(); i++)
+	for (int i = 1; i < shortest_path.size()-1; i++)
 	{
 		//find the vertex in the spt and the direct children will be the candidate
-		SPTnode* vertex = spt->get_node(shortest_path[i]);
+		SPTnode* vertex = spt_s->get_node(shortest_path[i]);
 		if (vertex == NULL)
 		{
 			printf("couldn't find node in tree\n");
@@ -113,12 +153,29 @@ void EVENTS::compute_boundary_events(SPT* spt)
 
 		vector<SPTnode*> candidates = vertex->get_children();
 
+		SPTnode* vertex_t = spt_t->get_node(shortest_path[i]);
+		if (vertex_t == NULL)
+		{
+			printf("couldn't find node in tree\n");
+			exit(100);
+		}
+
+		vector<SPTnode*> t_candidates = vertex_t->get_children();
+		candidates.insert(candidates.end(), t_candidates.begin(), t_candidates.end());
+
 		//then check the tangent thing...
 		for (int j = 0; j < candidates.size(); j++)
 		{
-			//must check alg
+			int vertex_id = candidates[j]->get_id();
+			if (vertex_id != shortest_path[i + 1] && vertex_id != shortest_path[i - 1])
+			{
+				if (is_tangent(shortest_path[i - 1], shortest_path[i], shortest_path[i + 1], vertex_id))
+				{
+					LOS* los = new LOS(next_line_id++, shortest_path[i], vertex_id, shortest_path[i], BOUNDARY);
+
+					queue[i].push_back(los);
+				}
+			}
 		}
-
-
 	}
 }

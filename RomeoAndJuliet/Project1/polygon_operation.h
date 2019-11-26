@@ -59,6 +59,27 @@ double calculate_angle_between(int apex, int first, int second)
 
 	return temp;
 }
+
+/* returns angle between to lines ranging in 0~PI
+	used to sort lines of sight in event_computation.h 
+	q1,q2 are the base line's endpoints */
+double calculate_angle_between_positive(int p1, int p2, int q1, int q2)
+{
+	point_type first_ang = calculate_angle(p1,p2);
+	point_type second_ang = calculate_angle(q1, q2);
+
+	double temp = first_ang - second_ang;
+
+	while (temp > PI || temp < 0)
+	{
+		if (temp > PI)
+			temp -= PI;
+		else if (temp < 0)
+			temp += PI;
+	}
+
+	return temp;
+}
 int get_left_vertex(vector<int>& polygon, int polygonID) {
 	return polygon[(polygonID - 1 + polygon.size()) % (polygon.size())];
 }

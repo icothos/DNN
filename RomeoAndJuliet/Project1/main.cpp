@@ -744,24 +744,20 @@ void add_test_point(int button, int state, int x, int y) {
 				test_point_index = point_list.size() - 2; //index of the first test point in the 'point_list' vector
 				final_hour = find_shortest_path_test_points(); // RETURNS SINGLE FINAL HOURGLASS FOR THE TWO POINTS IN THE INPUT VECTOR
 
-				Point p1(662,600);
-				Point e1(282, 448);
-				Point e2(372, 400);
-				//shortest_path_to_line(p1, e1, e2);//////////////////////////////////////
 				int testing_function = point_state.find_triangle(point_list[6]);
 				printf("hi");
 
 				SPT* spt_s = new SPT(point_list.size() - 2, point_list.size() - 1);
-				vector<int> spath = spt_s->find_shortest_path_default();
+				vector<int> spath = spt_s->compute_shortest_path_default();
 
 				SPT* spt_t = new SPT(point_list.size() - 1, point_list.size() - 2);
-				vector<int> tpath = spt_t->find_shortest_path_default();
+				vector<int> tpath = spt_t->compute_shortest_path_default();
 
 				EVENTS* events = new EVENTS(spath);
 				events->compute_path_events();
 				events->compute_boundary_events(spt_s,spt_t);
 
-				printf("done computing the boundary and path events!\n");
+  				printf("done computing the boundary and path events!\n");
 				
 			}
 			glutPostRedisplay();

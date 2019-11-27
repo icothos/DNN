@@ -608,9 +608,7 @@ void shortest_path_point_to_line(int p, Edge e)
 		shortest_path.push_back(point_list[leading_chain->back()]);
 	}
 	return;
-
 }
-
 
 Hourglass find_shortest_path(int p1, int p2) //input : two test points , returns final hourglass(string) representing shortest path of the two points
 {
@@ -666,8 +664,8 @@ Hourglass find_shortest_path(int p1, int p2) //input : two test points , returns
 
 	return final_hourglass;
 }
-
-Hourglass find_shortest_path_test_points()//(vector<Point> test_points) //input : two test points , returns final hourglass(string) representing shortest path of the two points
+/*input : two test points , returns final hourglass(string) representing shortest path of the two points*/
+Hourglass find_shortest_path_test_points()
 {
 	selected_triangle = vector<int>();
 	sequence_diagonal = vector<int>();
@@ -742,12 +740,6 @@ void add_test_point(int button, int state, int x, int y) {
 
 			if (test_points.size() == 2)
 			{
-				test_point_index = point_list.size() - 2; //index of the first test point in the 'point_list' vector
-				final_hour = find_shortest_path_test_points(); // RETURNS SINGLE FINAL HOURGLASS FOR THE TWO POINTS IN THE INPUT VECTOR
-
-				int testing_function = point_state.find_triangle(point_list[6]);
-				printf("hi");
-
 				SPT* spt_s = new SPT(point_list.size() - 2, point_list.size() - 1);
 				vector<int> spath = spt_s->compute_shortest_path_default();
 				shortest_path = vector<Point>();
@@ -762,12 +754,10 @@ void add_test_point(int button, int state, int x, int y) {
 				events->compute_boundary_events(spt_s,spt_t);
 
   				printf("done computing the boundary and path events!\n");
-				
 			}
 			glutPostRedisplay();
 		}
 	}
-
 }
 
 
@@ -850,21 +840,6 @@ void display_chain(Chain * chain) {
 }
 void display_string(String * s) {
 	display_chain(s->get_chain());
-	/*int c_num = s->get_children_number();
-	if (c_num == 0) {
-		display_chain(s->get_chain());
-	}
-	else {
-		if (c_num > 0) {
-			display_string(s->get_left_string());
-		}
-		if (c_num > 1) {
-			display_string(s->get_middle_string());
-		}
-		if (c_num > 2) {
-			display_string(s->get_right_string());
-		}
-	}*/
 	return;
 }
 void display() {
@@ -880,7 +855,6 @@ void display() {
 	glClearColor(1.0, 1.0, 1.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 	gluOrtho2D(min_x, max_x, min_y, max_y);
-
 	glEnable(GL_POINT_SMOOTH);
 
 	/* Drawing the Polygon Boundary */
@@ -906,10 +880,10 @@ void display() {
 	}
 	
 	/* Draws the sequence diagonals of the shortest path */
-	glColor3f(1.0f, 0.0f, 1.0f);
+	/*glColor3f(1.0f, 0.0f, 1.0f);
 	for (int i = 0; i < (int)sequence_diagonal.size(); i++) {
 		display_edge(diagonal_list[sequence_diagonal[i]]);
-	}
+	}*/
 	
 	/* temporary scheme to draw what's in the shortest_path vector */
 	glColor3f(0.5f, 0.2f, 0.9f);

@@ -384,6 +384,7 @@ void preprocess_polygon()
 	diagonal_list = vector<Edge>(diagonal_list.begin(), diagonal_list.begin() + d_size);
 	
 }
+
 int main(int argc, char **argv) {
 	polygon_list = vector<vector<int>>();
 	diagonal_list = vector<Edge>();
@@ -749,7 +750,10 @@ void add_test_point(int button, int state, int x, int y) {
 
 				SPT* spt_s = new SPT(point_list.size() - 2, point_list.size() - 1);
 				vector<int> spath = spt_s->compute_shortest_path_default();
-
+				shortest_path = vector<Point>();
+				for (int i = 0; i < spath.size(); i++)
+					shortest_path.push_back(point_list[spath[i]]);
+					
 				SPT* spt_t = new SPT(point_list.size() - 1, point_list.size() - 2);
 				vector<int> tpath = spt_t->compute_shortest_path_default();
 
@@ -773,10 +777,12 @@ void clear_test_points() {
 	test_points = vector<Point>();
 	selected_triangle = vector<int>();
 	sequence_diagonal = vector<int>();
+	shortest_path = vector<Point>();
 }
 void clear_test_points(unsigned char key, int x, int y) {
 	switch (key) {
 	case ' ':
+		shortest_path = vector<Point>(); 
 		clear_test_points();
 		break;
 	}
@@ -875,45 +881,37 @@ void display() {
 	glClear(GL_COLOR_BUFFER_BIT);
 	gluOrtho2D(min_x, max_x, min_y, max_y);
 
-	
-	glLineWidth(8);
-	glPointSize(5.0f);
 	glEnable(GL_POINT_SMOOTH);
 
-	
+	/* Drawing the Polygon Boundary */
+	glLineWidth(8);
+	glPointSize(5.0f);
 	glColor3f(1, float(0.7137), float(0.7568)); 
-
 	glBegin(GL_LINE_LOOP);
 	for (int i = 0; i < v_num; i++)
-	{
 		glVertex2d(point_list[i].get_x(), point_list[i].get_y());
-	}
 	glEnd();
 
+	/* Marks the first vertex (index 0) of the polygon ( a Black dot ) */
 	glColor3f(0.0f, 0.0f, 0.0f);
 	glBegin(GL_POINTS);
 	glVertex2d(point_list[0].get_x(), point_list[0].get_y());
 	glEnd();
 
-	glColor3f(0.5f, 0.7f, 0.30f);
-	glBegin(GL_POINTS);
-	for (int i = 1; i < v_num; i++)
-	{
-		glVertex2d(point_list[i].get_x(), point_list[i].get_y());
-	}
-	glEnd();
-
-	glLineWidth(3);//every diagonal
+	/* Draws the diagonals of the polygon */
+	glLineWidth(3);
 	glColor3f(float(0.6), float(0.6), float(0.6));
 	for (int i = 0; i < (int)(diagonal_list.size()); i++) {;
 		display_edge(diagonal_list[i]);
 	}
 	
+	/* Draws the sequence diagonals of the shortest path */
 	glColor3f(1.0f, 0.0f, 1.0f);
 	for (int i = 0; i < (int)sequence_diagonal.size(); i++) {
 		display_edge(diagonal_list[sequence_diagonal[i]]);
 	}
 	
+	/* temporary scheme to draw what's in the shortest_path vector */
 	glColor3f(0.5f, 0.2f, 0.9f);
 	glBegin(GL_LINES);
 	for (int i = 0; i < (int)shortest_path.size()-1; i++)
@@ -924,11 +922,12 @@ void display() {
 	glEnd();
 
 
+	/* Marks the two test points */
 	glColor3d(0, 0.47, 0.43);
-	
-	for (int t = 0; t <(int)test_points.size(); t++) {
+	for (int t = 0; t <(int)test_points.size(); t++)
 		display_point(test_points[t]);
-	}
+	
+	/*
 	if (test_points.size() >= 2) {
 		glColor3f(0.0f, 1.0f, 0.0f);
 		Chain ** first_chain = final_hour.get_first_chain();
@@ -951,55 +950,21 @@ void display() {
 		for (int i = 0; i < 2; i++) {
 			display_edge(e_list[i]);
 		}
-	}
+	}*/
 	
+
+	/* Marks the vertices of the polygon as Dots */
+	glColor3f(0.5f, 0.7f, 0.30f);
+	glColor3f(1, 1, 0);
+	glBegin(GL_POINTS);
+	for (int i = 1; i < v_num; i++)
+		glVertex2d(point_list[i].get_x(), point_list[i].get_y());
+	glEnd();
+
+
+
 	glutSwapBuffers();
 	return;
-
-	/*glBegin(GL_LINE_LOOP);
-	for (int i = 0; i < 3; i++)
-	glVertex2d(point_list[bigT[i]].get_x(), point_list[bigT[i]].get_y());
-	glEnd();
-	*/
-
-	/*
-	for (int i = 0; i < (int)outer_diagonal_list.size(); i++) {
-	int origin = outer_diagonal_list[i].get_origin();
-	int dest = outer_diagonal_list[i].get_dest();
-	glBegin(GL_LINES);
-	glVertex2d(point_list[origin].get_x(), point_list[origin].get_y());
-	glVertex2d(point_list[dest].get_x(), point_list[dest].get_y());
-	glEnd();
-	}*/
-
-	/*glEnable(GL_POINT_SMOOTH);
-	glColor3d(0, 0.47, 0.43);
-	glBegin(GL_POINTS); //starts drawing of points
-	glVertex2d(test_points[t].get_x(), test_points[t].get_y());
-	glEnd();
-
-	glColor3d(0, 0, 1);
-	if (selected_triangle[t] == -1) {
-	continue;
-	}
-	else if (selected_triangle[t] >= t_num) {
-	glBegin(GL_LINE_LOOP);
-	for (int i = 0; i < 3; i++) {
-	Point p = point_list[outer_polygon_list[selected_triangle[t] - t_num][i]];
-	glVertex2d(p.get_x(), p.get_y());
-	}
-	glEnd();
-	}
-	else {
-	glBegin(GL_LINE_LOOP);
-	for (int i = 0; i < 3; i++) {
-	Point p = point_list[polygon_list[selected_triangle[t]][i]];
-	glVertex2d(p.get_x(), p.get_y());
-	}
-	glEnd();
-	}
-	*/
-
 }
 int read_file(const string filePath) {
 	ifstream openFile(filePath.data());

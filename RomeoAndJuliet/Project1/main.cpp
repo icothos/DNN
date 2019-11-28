@@ -43,6 +43,11 @@ Hourglass test_hourglass;
 vector<Point> polygon_boundary;
 ////////////////////
 
+//global variables for display using openGL functions
+vector<Point> shortest_path;
+EVENTS Events;
+
+
 //Hourglass find_shortest_path(Point origin, Point dest,bool sp_case);
 Hourglass construct_hourglass_point_line(int p, Edge e);
 int w_h=800, w_w=800;
@@ -526,7 +531,6 @@ Point foot_of_perpendicular(int p, Edge e)
 	}
 }
 
-vector<Point> shortest_path;
 void shortest_path_point_to_line(int p, Edge e)
 {
 	shortest_path = vector<Point>();
@@ -753,6 +757,7 @@ void add_test_point(int button, int state, int x, int y) {
 				events->compute_path_events();
 				events->compute_boundary_events(spt_s,spt_t);
 
+				Events = *events;
   				printf("done computing the boundary and path events!\n");
 			}
 			glutPostRedisplay();
@@ -842,6 +847,11 @@ void display_string(String * s) {
 	display_chain(s->get_chain());
 	return;
 }
+
+void set_color_rgb(int r, int g, int b)
+{
+	glColor3f(r / 255.0, g / 255.0, b / 255.0);
+}
 void display() {
 
 	max_y = max_element(point_list.begin(), point_list.end() - 3 - test_points.size(), [](Point &a, Point &b) {return a.get_y() < b.get_y(); })->get_y();
@@ -856,15 +866,17 @@ void display() {
 	glClear(GL_COLOR_BUFFER_BIT);
 	gluOrtho2D(min_x, max_x, min_y, max_y);
 	glEnable(GL_POINT_SMOOTH);
+	glEnable(GL_POLYGON_SMOOTH);
 
 	/* Drawing the Polygon Boundary */
-	glLineWidth(8);
+	glLineWidth(4);
 	glPointSize(5.0f);
-	glColor3f(1, float(0.7137), float(0.7568)); 
+	set_color_rgb(52, 152, 219);
 	glBegin(GL_LINE_LOOP);
 	for (int i = 0; i < v_num; i++)
 		glVertex2d(point_list[i].get_x(), point_list[i].get_y());
 	glEnd();
+
 
 	/* Marks the first vertex (index 0) of the polygon ( a Black dot ) */
 	glColor3f(0.0f, 0.0f, 0.0f);
@@ -879,14 +891,25 @@ void display() {
 		display_edge(diagonal_list[i]);
 	}
 	
-	/* Draws the sequence diagonals of the shortest path */
-	/*glColor3f(1.0f, 0.0f, 1.0f);
-	for (int i = 0; i < (int)sequence_diagonal.size(); i++) {
-		display_edge(diagonal_list[sequence_diagonal[i]]);
-	}*/
+	/* Mark the boundary events (path events overlap with the shortest path) */
+	glLineWidth(3);
+	set_color_rgb(152, 219, 52); //green
+	vector<vector<LOS*>> Queue = Events.get_queue();
+	glBegin(GL_LINES);
+	for (int i = 0; i < Queue.size(); i++)
+	{
+		for (int j = 1; j < Queue[i].size(); j++)
+		{
+			glVertex2d(point_list[Queue[i][j]->get_endpoint1()].get_x(), point_list[Queue[i][j]->get_endpoint1()].get_y());
+			glVertex2d(point_list[Queue[i][j]->get_endpoint2()].get_x(), point_list[Queue[i][j]->get_endpoint2()].get_y());
+		}
+	}
+	glEnd();
 	
-	/* temporary scheme to draw what's in the shortest_path vector */
-	glColor3f(0.5f, 0.2f, 0.9f);
+
+	/* Draws the shortest path computed using the shortest path tree */
+	set_color_rgb(219, 52, 152);
+	glLineWidth(4);
 	glBegin(GL_LINES);
 	for (int i = 0; i < (int)shortest_path.size()-1; i++)
 	{
@@ -896,7 +919,8 @@ void display() {
 	glEnd();
 
 
-	/* Marks the two test points */
+
+	/* Emphasizes the two test points (start and end vertices of the shortest path) */
 	glColor3d(0, 0.47, 0.43);
 	for (int t = 0; t <(int)test_points.size(); t++)
 		display_point(test_points[t]);
@@ -927,7 +951,7 @@ void display() {
 	}*/
 	
 
-	/* Marks the vertices of the polygon as Dots */
+	/* Emphasizes the vertices of the polygon boundary */
 	glColor3f(0.5f, 0.7f, 0.30f);
 	glColor3f(1, 1, 0);
 	glBegin(GL_POINTS);

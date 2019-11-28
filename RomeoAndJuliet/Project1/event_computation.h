@@ -37,11 +37,12 @@ enum event_type {
 };
 class LOS {
 	int id;
-	int endpoint1;
-	int endpoint2;
+	event_type type;
+	int endpoint1;//in case of boundary events, rotation vertices are stored as endpoint1
+	int endpoint2;//in case of boundary events, polygon vertices that are not rotation vertices are stored as endpoint2
+	Point other_endpoint;//the point of intersection between the l.o.s. and the polygon in stored here
 	float slope;
 	float path_event_angle; //the angle between the previous path event (used to sort the boundary events)
-	event_type type;
 	int rotation_vertex;
 public:
 	LOS(int _id, int p1, int p2, int rot_vertex,float angle, event_type _type)
@@ -79,13 +80,74 @@ public:
 	{
 		return type;
 	}
+	void compute_other_endpoint();
 };
+
+void LOS::compute_other_endpoint()
+{
+	int rotation = endpoint1;
+	int endpoint = endpoint2;
+	int triangle;
+	int vertex1 = -1;
+	int vertex2 = -1;
+
+	//stores index into polygon_list
+	vector<int> candidates = point_state.find_all_triangles(point_list[rotation]);
+	for (int i = 0; i < candidates.size(); i++)
+	{
+
+		triangle = candidates[i];
+		for (int j = 0; j < 3; j++)
+		{
+			if (polygon_list[triangle][j] != rotation)
+			{
+				if (vertex1 != -1)
+					vertex2 = polygon_list[candidates[i]][j];
+				else
+					vertex1 = polygon_list[candidates[i]][j];
+			}
+		}
+
+		if (vertex1 == -1 || vertex2 == -1)
+		{
+			printf("this shouldn't be happening\n");
+			exit(38);
+		}
+
+		double first = calculate_angle_between(rotation, vertex1, endpoint, rotation);
+		double second = calculate_angle_between(rotation, vertex2, endpoint, rotation);
+
+		if (first*second > 0)
+			continue;
+		if (first > PI / 2 && second > PI / 2)
+			continue;
+		else
+			break;
+		//float angle = calculate_angle_between(rotation, )
+	}
+	//triangle is selected + vertex1 and vertex2'
+
+	//check if it is a polygon edge
+	if (abs((vertex1 - vertex2)) % v_num == 0)
+	{
+		//function that calculates intersection of two lines
+	}
+	else
+	{
+
+	}
+
+}
+
+
+
 
 class EVENTS {
 	int next_line_id;
 	vector<vector<LOS*>> queue;
 	vector<int> shortest_path;
 public:
+	EVENTS() {}
 	EVENTS(vector<int> _shortest_path)
 	{
 		next_line_id = 0;
@@ -98,6 +160,9 @@ public:
 	vector<int> get_shortest_path()
 	{
 		return shortest_path;
+	}
+	vector<vector<LOS*>> get_queue() {
+		return queue;
 	}
 	void compute_path_events();
 	void compute_boundary_events(SPT* spt_s, SPT* spt_t);
@@ -194,8 +259,7 @@ void EVENTS::compute_boundary_events(SPT* spt_s, SPT* spt_t)
 			printf("couldn't find node in tree\n");
 			exit(-1);
 		}
-
-		vector<SPTnode*> candidates = vertex->get_children();
+		vector<SPTnode*> s_candidates = vertex->get_children();
 
 		SPTnode* vertex_t = spt_t->get_node(cur);
 		if (vertex_t == NULL)
@@ -203,21 +267,21 @@ void EVENTS::compute_boundary_events(SPT* spt_s, SPT* spt_t)
 			printf("couldn't find node in tree\n");
 			exit(100);
 		}
-
 		vector<SPTnode*> t_candidates = vertex_t->get_children();
-		candidates.insert(candidates.end(), t_candidates.begin(), t_candidates.end());
+
+		s_candidates.insert(s_candidates.end(), t_candidates.begin(), t_candidates.end());
 
 		//then check the tangent thing...
-		for (int j = 0; j < candidates.size(); j++)
+		for (int j = 0; j < s_candidates.size(); j++)
 		{
-			int vertex_id = candidates[j]->get_id();
+			int vertex_id = s_candidates[j]->get_id();
 			if (vertex_id != next && vertex_id != shortest_path[i - 1])
 			{
 				if (is_tangent(prev,cur,next, vertex_id))
 				{
 					float angle = calculate_angle_between_positive(cur, vertex_id, prev, cur);
 					LOS* los = new LOS(next_line_id++, cur, vertex_id, cur, angle, BOUNDARY);
-
+					los->compute_other_endpoint();
 					queue[i-1].push_back(los);
 				}
 			}

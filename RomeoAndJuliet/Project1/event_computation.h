@@ -4,6 +4,7 @@
 #include<vector>
 #include"Point.h"
 #include "ShortestPathTree.h" //includes polygon_operation.h
+#include "polygon_decomposition.h"
 
 #define INT_MAX 100000000
 using namespace std;
@@ -80,66 +81,163 @@ public:
 	{
 		return type;
 	}
-	void compute_other_endpoint();
+	bool compute_other_endpoint();
 };
 
-void LOS::compute_other_endpoint()
-{
-	int rotation = endpoint1;
-	int endpoint = endpoint2;
-	int triangle;
-	int vertex1 = -1;
-	int vertex2 = -1;
 
-	//stores index into polygon_list
+
+bool check_penetration(int from, int to, int apex, int first, int second)
+{
+	double firstA = calculate_angle_between(apex, first, from, to);
+	double secondA = calculate_angle_between(apex, second, from, to);
+
+	if (firstA*secondA > 0)
+		return false;
+	else if (abs(firstA) > PI / 2 && abs(secondA) > PI / 2)
+		return false;
+	else
+		return true;
+}
+/* returns the index of the triangle in polygon_list that (endpoint, rotation) penentrates through
+   @rotation : the rotation vertex
+   @endpoint : the other vertex of the boundary event
+   @vertex : the name of the int[2] array that contains the indices of the two other triangle vertices 
+ */
+int choose_triangle(int rotation, int endpoint, int* vertex)
+{
+	//list of all triangles adjacent to vertex `rotation'
 	vector<int> candidates = point_state.find_all_triangles(point_list[rotation]);
+	int triangle;
+
+	//find the triangle that (endpoint,rotation) penentrates through!!
 	for (int i = 0; i < candidates.size(); i++)
 	{
-
 		triangle = candidates[i];
 		for (int j = 0; j < 3; j++)
 		{
-			if (polygon_list[triangle][j] != rotation)
+			if (polygon_list[triangle][j] == rotation)
 			{
-				if (vertex1 != -1)
-					vertex2 = polygon_list[candidates[i]][j];
-				else
-					vertex1 = polygon_list[candidates[i]][j];
+				vertex[0] = polygon_list[triangle][(j + 1) % 3];
+				vertex[1] = polygon_list[triangle][(j + 2) % 3];
+				break;
 			}
 		}
 
-		if (vertex1 == -1 || vertex2 == -1)
-		{
-			printf("this shouldn't be happening\n");
-			exit(38);
-		}
-
-		double first = calculate_angle_between(rotation, vertex1, endpoint, rotation);
-		double second = calculate_angle_between(rotation, vertex2, endpoint, rotation);
-
-		if (first*second > 0)
-			continue;
-		if (first > PI / 2 && second > PI / 2)
-			continue;
-		else
+		if (vertex[0] == -1 || vertex[1] == -1)
 			break;
-		//float angle = calculate_angle_between(rotation, )
-	}
-	//triangle is selected + vertex1 and vertex2'
 
-	//check if it is a polygon edge
-	if (abs((vertex1 - vertex2)) % v_num == 0)
-	{
-		//function that calculates intersection of two lines
+		if (check_penetration(endpoint, rotation, rotation, vertex[0], vertex[1]))
+			return triangle;
 	}
+
+	return -1;
+}
+
+/* returns the pointer the to Point such that the point is the intersection of
+the extend line of (p1, p2) and the bounded line (q1,q2) (segment) */
+Point* get_line_intersection(int p1, int p2, int q1, int q2)
+{
+	Point A = point_list[p1];
+	Point B = point_list[p2];
+	Point C = point_list[q1];
+	Point D = point_list[q2];
+
+	point_type a1 = B.get_y() - A.get_y();
+	point_type b1 = A.get_x() - B.get_x();
+	point_type c1 = a1 * (A.get_x()) + b1 * (A.get_y());
+
+	point_type a2 = D.get_y() - C.get_y();
+	point_type b2 = C.get_x() - D.get_x();
+	point_type c2 = a2 * (C.get_x()) + b2 * (C.get_y());
+
+	point_type determinant = a1 * b2 - a2 * b1;
+
+	//the two lines are parallel
+	if (determinant == 0)
+		return NULL;
+
+	point_type x = (b2*c1 - b1 * c2) / determinant;
+	point_type y = (a1*c2 - a2 * c1) / determinant;
+	Point newP = Point(x, y);
+	return &newP;
+}
+
+Point* get_endpoint(int from, int to,int tri, int vertex1, int vertex2)
+{
+	Triangle triangle = t_list[tri];
+	int* diag_list = triangle.get_d_list();
+	int* p_list = triangle.get_p_list();
+	int other_vertex = -1;
+	int chosen_vertex = -1;
+	int diag, new_tri;
+
+	for (int i = 0; i < 3; i++)
+	{
+		if (p_list[i] != vertex1 && p_list[i] != vertex2)
+		{
+			other_vertex = p_list[i];
+			break;
+		}
+	}
+
+	for (int i = 0; i < 3; i++)
+	{
+		if (diagonal_list[diag_list[i]].check_same_point(vertex1) && diagonal_list[diag_list[i]].check_same_point(vertex2))
+			diag = diag_list[i];
+	}
+
+	if (check_penetration(from, to, to, vertex1, other_vertex))
+		chosen_vertex = vertex1;
+	else if (check_penetration(from, to, to, vertex2, other_vertex))
+		chosen_vertex = vertex2;
+	else
+		return NULL;	
+
+	//check if polygon edge
+	int diff = abs(chosen_vertex - other_vertex);
+	if (diff == 0 || diff == (v_num - 1))
+		return get_line_intersection(from, to, chosen_vertex, other_vertex);
 	else
 	{
+		//find new triangle 
+		if (diagonal_list[diag].get_triangle()[0] == tri)
+			new_tri = diagonal_list[diag].get_triangle()[1];
+		else
+			new_tri = diagonal_list[diag].get_triangle()[0];
 
+		return get_endpoint(from, to, new_tri, chosen_vertex, other_vertex);
 	}
-
 }
 
 
+bool LOS::compute_other_endpoint()
+{
+	int rotation = endpoint1;
+	int endpoint = endpoint2;
+	int vertex[2] = { -1,-1 };
+
+	//compute triangle that the boundary event penetrates through
+	int triangle = choose_triangle(rotation, endpoint, vertex);
+	if (triangle == -1)
+	{
+		return false;
+	}
+	
+	//polygon vertex
+	if (abs(vertex[0] - vertex[1]) % v_num == 0)
+	{
+		other_endpoint = *get_line_intersection(rotation, endpoint, vertex[0], vertex[1]);
+		return true;
+	}
+	else
+	{
+		Point* ptr =  get_endpoint(endpoint, rotation, triangle, vertex[0], vertex[1]);
+		if (ptr == NULL)
+			return false;
+		other_endpoint = *ptr;
+		return true;
+	}
+}
 
 
 class EVENTS {

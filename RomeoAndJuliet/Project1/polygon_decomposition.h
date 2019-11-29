@@ -94,6 +94,10 @@ public:
 	bool * get_dual_check_children() {
 		return dual_check_children;
 	}
+	int* get_p_list()
+	{
+		return p_list;
+	}
 	int * get_d_list() {
 		return d_list;
 	}

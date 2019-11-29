@@ -44,6 +44,7 @@ public:
 		int prev = -1;
 		int c_index = 0;
 		for (int i = 0; i < (int)_point_list.size(); i++) {
+
 			if (prev == _point_list[i]) continue;
 			prev = i;
 			c_point_list.push_back(_point_list[i]);

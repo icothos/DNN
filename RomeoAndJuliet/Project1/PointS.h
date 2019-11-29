@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <vector>
+#include <unordered_set>
 #include "Point.h"
 #include <cmath>
 #include <map>
@@ -137,6 +138,8 @@ public:
 				possible_triangle_cells.push_back(ret_candidates[i]);
 		}
 
+		unordered_set<int> s(possible_triangle_cells.begin(), possible_triangle_cells.end());
+		possible_triangle_cells.assign(s.begin(), s.end());
 		return possible_triangle_cells;
 	}
 	int find_triangle(Point & target) {

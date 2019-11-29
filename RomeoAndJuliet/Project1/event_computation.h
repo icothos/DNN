@@ -93,7 +93,7 @@ bool check_penetration(int from, int to, int apex, int first, int second)
 
 	if (firstA*secondA > 0)
 		return false;
-	else if (abs(firstA) > PI / 2 && abs(secondA) > PI / 2)
+	else if (abs(firstA) + abs(secondA) >= PI)
 		return false;
 	else
 		return true;
@@ -169,7 +169,8 @@ Point* get_endpoint(int from, int to,int tri, int vertex1, int vertex2)
 	int* p_list = triangle.get_p_list();
 	int other_vertex = -1;
 	int chosen_vertex = -1;
-	int diag, new_tri;
+	int diag = -1;
+	int new_tri = -1;;
 
 	for (int i = 0; i < 3; i++)
 	{
@@ -178,12 +179,6 @@ Point* get_endpoint(int from, int to,int tri, int vertex1, int vertex2)
 			other_vertex = p_list[i];
 			break;
 		}
-	}
-
-	for (int i = 0; i < 3; i++)
-	{
-		if (diagonal_list[diag_list[i]].check_same_point(vertex1) && diagonal_list[diag_list[i]].check_same_point(vertex2))
-			diag = diag_list[i];
 	}
 
 	if (check_penetration(from, to, to, vertex1, other_vertex))
@@ -195,11 +190,20 @@ Point* get_endpoint(int from, int to,int tri, int vertex1, int vertex2)
 
 	//check if polygon edge
 	int diff = abs(chosen_vertex - other_vertex);
-	if (diff == 0 || diff == (v_num - 1))
+	if (diff == 1 || diff == (v_num - 1))
 		return get_line_intersection(from, to, chosen_vertex, other_vertex);
 	else
 	{
 		//find new triangle 
+		for (int i = 0; i < 3; i++)
+		{
+			if (diag_list[i]!=-1 && diagonal_list[diag_list[i]].check_same_point(chosen_vertex) != -1 && diagonal_list[diag_list[i]].check_same_point(other_vertex) != -1)
+				diag = diag_list[i];
+		}
+
+		if (diag == -1)
+			return NULL;
+
 		if (diagonal_list[diag].get_triangle()[0] == tri)
 			new_tri = diagonal_list[diag].get_triangle()[1];
 		else
@@ -214,24 +218,44 @@ bool LOS::compute_other_endpoint()
 {
 	int rotation = endpoint1;
 	int endpoint = endpoint2;
+	printf("%d %d\n", rotation, endpoint);
 	int vertex[2] = { -1,-1 };
-
+	
 	//compute triangle that the boundary event penetrates through
 	int triangle = choose_triangle(rotation, endpoint, vertex);
 	if (triangle == -1)
-	{
 		return false;
-	}
 	
 	//polygon vertex
-	if (abs(vertex[0] - vertex[1]) % v_num == 0)
+	int diff = abs(vertex[0]-vertex[1]);
+	if (diff == 1 || diff == (v_num - 1))
 	{
 		other_endpoint = *get_line_intersection(rotation, endpoint, vertex[0], vertex[1]);
 		return true;
 	}
 	else
 	{
-		Point* ptr =  get_endpoint(endpoint, rotation, triangle, vertex[0], vertex[1]);
+		int new_tri = -1;
+		int* d_list = t_list[triangle].get_d_list();
+		int diag = -1;
+		for (int i = 0; i < 3; i++)
+		{
+			if (diagonal_list[d_list[i]].check_same_point(vertex[0])!=-1 && diagonal_list[d_list[i]].check_same_point(vertex[1])!=-1)
+			{
+				diag = d_list[i];
+				break;
+			}
+		}
+		if (diag == -1)
+			return false;
+
+		if (diagonal_list[diag].get_triangle()[0] == triangle)
+			new_tri = diagonal_list[diag].get_triangle()[1];
+		else
+			new_tri = diagonal_list[diag].get_triangle()[0];
+		
+
+		Point* ptr =  get_endpoint(endpoint, rotation, new_tri, vertex[0], vertex[1]);
 		if (ptr == NULL)
 			return false;
 		other_endpoint = *ptr;

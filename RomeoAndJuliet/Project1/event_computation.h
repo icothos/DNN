@@ -65,6 +65,10 @@ public:
 	{
 		return endpoint2;
 	}
+	Point get_other_endpoint()
+	{
+		return other_endpoint;
+	}
 	float get_slope()
 	{
 		return slope;
@@ -240,7 +244,7 @@ bool LOS::compute_other_endpoint()
 		int diag = -1;
 		for (int i = 0; i < 3; i++)
 		{
-			if (diagonal_list[d_list[i]].check_same_point(vertex[0])!=-1 && diagonal_list[d_list[i]].check_same_point(vertex[1])!=-1)
+			if (d_list[i]!=-1 && diagonal_list[d_list[i]].check_same_point(vertex[0])!=-1 && diagonal_list[d_list[i]].check_same_point(vertex[1])!=-1)
 			{
 				diag = d_list[i];
 				break;

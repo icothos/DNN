@@ -773,6 +773,7 @@ void clear_test_points() {
 	selected_triangle = vector<int>();
 	sequence_diagonal = vector<int>();
 	shortest_path = vector<Point>();
+	Events = *(new EVENTS());
 }
 void clear_test_points(unsigned char key, int x, int y) {
 	switch (key) {
@@ -902,6 +903,19 @@ void display() {
 		{
 			glVertex2d(point_list[Queue[i][j]->get_endpoint1()].get_x(), point_list[Queue[i][j]->get_endpoint1()].get_y());
 			glVertex2d(point_list[Queue[i][j]->get_endpoint2()].get_x(), point_list[Queue[i][j]->get_endpoint2()].get_y());
+		}
+	}
+	glEnd();
+
+	/* Mark the extensions of the boundary events */
+	set_color_rgb(242, 200, 228); //green
+	glBegin(GL_LINES);
+	for (int i = 0; i < Queue.size(); i++)
+	{
+		for (int j = 1; j < Queue[i].size(); j++)
+		{
+			glVertex2d(point_list[Queue[i][j]->get_endpoint1()].get_x(), point_list[Queue[i][j]->get_endpoint1()].get_y());
+			glVertex2d((Queue[i][j]->get_other_endpoint()).get_x(), (Queue[i][j]->get_other_endpoint()).get_y());
 		}
 	}
 	glEnd();

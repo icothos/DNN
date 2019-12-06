@@ -18,11 +18,13 @@ class SPT
 	int t_tri_num;
 	vector<int> t_tri_vertices;
 	int t_pred;
+	bool set;
 public:
 	SPT()
 	{
 		root = NULL;
 		components = vector<int>();
+		set = false;
 	}
 	SPT(int _s,int _t) //must be called after decomposition is complete
 	{
@@ -34,6 +36,7 @@ public:
 		t_tri_num = point_state.find_triangle(point_t);
 		t_tri_vertices = polygon_list[t_tri_num];
 		t_pred = -1;
+		set = false;
 	}
 	int set_pred(int leaf, int parent);
 	/* Returns the SPT node pointer with the vertex ID */
@@ -69,11 +72,10 @@ public:
 		return components.size();
 	}
 	bool compute_shortest_path_tree();
-	vector<int> compute_shortest_path_default();
-	vector<int> compute_shortest_path(int _t);
+	vector<int> retrieve_shortest_path_default();
+	vector<int> retrieve_shortest_path(int _t);
 	void split_funnel(Funnel* funnel);
 	int choose_v(Funnel* funnel);
-	vector<int> compute_shortest_path_line(int e1, int e2);
 };
 
 /*
@@ -259,13 +261,18 @@ void SPT::split_funnel(Funnel* funnel)
 	return;
 }
 
-vector<int> SPT::compute_shortest_path_default()
+vector<int> SPT::retrieve_shortest_path_default()
 {
-	return compute_shortest_path(t);
+	return retrieve_shortest_path(t);
 }
-vector<int> SPT::compute_shortest_path(int _t)
+vector<int> SPT::retrieve_shortest_path(int _t)
 {
-	compute_shortest_path_tree();
+	if (!set)
+	{
+		printf("shortest path tree is not computed yet!\n");
+		exit(92);
+	}
+
 	vector<int> path;
 
 	if (is_set(_t)) // t is a polygon vertex, not a test point
@@ -306,5 +313,6 @@ bool SPT::compute_shortest_path_tree()
 		//call split
 		split_funnel(temp);
 	}
+	set = true;
 	return components.size();
 }

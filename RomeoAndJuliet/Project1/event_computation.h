@@ -170,10 +170,16 @@ bool check_penetration(int from, int to, int apex, int first, int second)
 /* computes the shortest path from the root of the spt to the line of sight*/
 void LOS::compute_shortest_path_to_los(bool spt_s, vector<int> point_to_apex, vector<int> chain1, vector<int> chain2)
 {
-	if (chain1.front() != chain2.front() || chain1.size() < 2 || chain2.size() < 2)
+
+	if (chain1.front() != chain2.front())
 	{
 		printf("not a valid chain (compute_shortest_path_to_los)\n");
 		exit(35);
+	}
+	else if (chain1.size() < 2 || chain2.size() < 2)
+	{
+		foot = point_list[chain1[0]];
+		return;
 	}
 
 	//Inserts into the shortest path all the vertices from the root to the common apex
@@ -540,5 +546,29 @@ void EVENTS::compute_boundary_events()
 
 void EVENTS::compute_bend_events()
 {
+	for (int i = 0; i < queue.size(); i++)
+	{
+		for (int j = 0; j < queue[i].size(); j++)
+		{
+			LOS* los = queue[i][j];
+			
+			vector<int> s_to_e1 = spt_s->retrieve_shortest_path(los->get_endpoint1());
+			vector<int> s_to_e2 = spt_s->retrieve_shortest_path(los->get_endpoint2());
 
+			vector<int> chain1, chain2, common_chain;
+
+			int last_common_index;
+			for (last_common_index = 0; last_common_index<s_to_e1.size() && last_common_index<s_to_e2.size() &&
+				s_to_e1.at(last_common_index) == s_to_e2.at(last_common_index); last_common_index++)
+			{
+				common_chain.push_back(s_to_e1[last_common_index]);
+			}
+			chain1.insert(chain1.end(), s_to_e1.begin() + last_common_index-1, s_to_e1.end());
+			chain2.insert(chain2.end(), s_to_e2.begin() + last_common_index-1, s_to_e2.end());
+			los->compute_shortest_path_to_los(true, common_chain, chain1, chain2);
+
+
+			//the same for s_to_e2
+		}
+	}
 }

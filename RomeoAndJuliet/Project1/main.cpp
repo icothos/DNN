@@ -731,17 +731,22 @@ void add_test_point(int button, int state, int x, int y) {
 			if (test_points.size() == 2)
 			{
 				SPT* spt_s = new SPT(point_list.size() - 2, point_list.size() - 1);
-				vector<int> spath = spt_s->compute_shortest_path_default();
+				SPT* spt_t = new SPT(point_list.size() - 1, point_list.size() - 2);
+				spt_s->compute_shortest_path_tree();
+				spt_t->compute_shortest_path_tree();
+
+				vector<int> tpath = spt_t->retrieve_shortest_path_default();
+				vector<int> spath = spt_s->retrieve_shortest_path_default();
+
 				shortest_path = vector<Point>();
 				for (int i = 0; i < spath.size(); i++)
 					shortest_path.push_back(point_list[spath[i]]);
 					
-				SPT* spt_t = new SPT(point_list.size() - 1, point_list.size() - 2);
-				vector<int> tpath = spt_t->compute_shortest_path_default();
-
+				//make sure the shortest path tree is computed for each spt
 				EVENTS* events = new EVENTS(spath, spt_s, spt_t);
 				events->compute_path_events();
 				events->compute_boundary_events();
+				events->compute_bend_events();
 
 				Events = *events;
   				printf("done computing the boundary and path events!\n");

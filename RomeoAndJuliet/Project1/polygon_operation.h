@@ -26,6 +26,8 @@ int v_num;
 int bigT[3];
 
 TRIANGLE_TREE tree;
+
+
 point_type dist(int p1, int p2) {
 	point_type diff_x = (point_list[p1].get_x() - point_list[p2].get_x());
 	point_type diff_y = (point_list[p1].get_y() - point_list[p2].get_y());
@@ -43,8 +45,32 @@ double calculate_angle(int origin, int target, int reverse) {
 	return atan2(y, x);
 }
 
+/* Computes the angle between two vectors (p1, p2) and (q1, q2)
+(q1, q2) is the base vector
+returns angle between PI ~ -PI */
+double calculate_angle_between(int p1, int p2, int q1, int q2)
+{
+	point_type first_ang = calculate_angle(p1, p2);
+	point_type second_ang = calculate_angle(q1, q2);
+
+	double temp = first_ang - second_ang;
+	while (temp > PI || temp < -1 * PI)
+	{
+		if (temp > PI)
+			temp -= 2 * PI;
+		else if (temp < -PI)
+			temp += 2 * PI;
+	}
+
+	return temp;
+}
+
+
 double calculate_angle_between(int apex, int first, int second)
 {
+	
+	return calculate_angle_between(apex, first, apex, second);
+	/*
 	point_type first_ang = calculate_angle(apex, first);
 	point_type second_ang = calculate_angle(apex, second);
 
@@ -57,7 +83,19 @@ double calculate_angle_between(int apex, int first, int second)
 			temp += 2*PI;
 	}
 
-	return temp;
+	return temp;*/
+}
+
+/* returns angle between to lines ranging in 0~PI
+	used to sort lines of sight in event_computation.h 
+	q1,q2 are the base line's endpoints */
+double calculate_angle_between_positive(int p1, int p2, int q1, int q2)
+{
+	double angle = calculate_angle_between(p1, p2, q1, q2);
+	if (angle < 0)
+		angle += PI;
+
+	return angle;
 }
 int get_left_vertex(vector<int>& polygon, int polygonID) {
 	return polygon[(polygonID - 1 + polygon.size()) % (polygon.size())];
@@ -815,4 +853,15 @@ void make_big_triangle() {
 	e = Edge(v_num + 2, bottom);
 	outer_diagonal_list.push_back(e);
 
+}
+
+/* noramlizes the input angle into a float ranging pi~-pi */
+float normalize_angle(float angle)
+{
+	if (angle > PI)
+		return angle - 2 * PI;
+	if (angle < -PI)
+		return angle + 2 * PI;
+
+	return angle;
 }

@@ -16,6 +16,7 @@
 #include <sstream>
 #include "hourglass_operation.h"
 #include "ShortestPathTree.h"
+#include "event_computation.h"
 
 #define NULL_HELPER -1
 #define PI 3.1415926535897931
@@ -41,6 +42,11 @@ Hourglass test_hourglass;
 ////////////////////
 vector<Point> polygon_boundary;
 ////////////////////
+
+//global variables for display using openGL functions
+vector<Point> shortest_path;
+EVENTS Events;
+
 
 //Hourglass find_shortest_path(Point origin, Point dest,bool sp_case);
 Hourglass construct_hourglass_point_line(int p, Edge e);
@@ -384,20 +390,6 @@ void preprocess_polygon()
 	
 }
 
-string makeMeString(GLint versionRaw) {
-	stringstream ss;
-	string str = "\0";
-
-	ss << versionRaw;    // transfers versionRaw value into "ss"
-	str = ss.str();        // sets the "str" string as the "ss" value
-	return str;
-}
-void formatMe(string* text) {
-	string dot = ".";
-
-	text->insert(1, dot); // transforms 30000 into 3.0000
-	text->insert(4, dot); // transforms 3.0000 into 3.00.00
-}
 int main(int argc, char **argv) {
 	polygon_list = vector<vector<int>>();
 	diagonal_list = vector<Edge>();
@@ -539,7 +531,6 @@ Point foot_of_perpendicular(int p, Edge e)
 	}
 }
 
-vector<Point> shortest_path;
 void shortest_path_point_to_line(int p, Edge e)
 {
 	shortest_path = vector<Point>();
@@ -621,9 +612,7 @@ void shortest_path_point_to_line(int p, Edge e)
 		shortest_path.push_back(point_list[leading_chain->back()]);
 	}
 	return;
-
 }
-
 
 Hourglass find_shortest_path(int p1, int p2) //input : two test points , returns final hourglass(string) representing shortest path of the two points
 {
@@ -679,8 +668,8 @@ Hourglass find_shortest_path(int p1, int p2) //input : two test points , returns
 
 	return final_hourglass;
 }
-
-Hourglass find_shortest_path_test_points()//(vector<Point> test_points) //input : two test points , returns final hourglass(string) representing shortest path of the two points
+/*input : two test points , returns final hourglass(string) representing shortest path of the two points*/
+Hourglass find_shortest_path_test_points()
 {
 	selected_triangle = vector<int>();
 	sequence_diagonal = vector<int>();
@@ -755,23 +744,25 @@ void add_test_point(int button, int state, int x, int y) {
 
 			if (test_points.size() == 2)
 			{
-				test_point_index = point_list.size() - 2; //index of the first test point in the 'point_list' vector
-				final_hour = find_shortest_path_test_points(); // RETURNS SINGLE FINAL HOURGLASS FOR THE TWO POINTS IN THE INPUT VECTOR
+				SPT* spt_s = new SPT(point_list.size() - 2, point_list.size() - 1);
+				vector<int> spath = spt_s->compute_shortest_path_default();
+				shortest_path = vector<Point>();
+				for (int i = 0; i < spath.size(); i++)
+					shortest_path.push_back(point_list[spath[i]]);
+					
+				SPT* spt_t = new SPT(point_list.size() - 1, point_list.size() - 2);
+				vector<int> tpath = spt_t->compute_shortest_path_default();
 
-				Point p1(662,600);
-				Point e1(282, 448);
-				Point e2(372, 400);
-				//shortest_path_to_line(p1, e1, e2);//////////////////////////////////////
-				int testing_function = point_state.find_triangle(point_list[6]);
-				printf("hi");
+				EVENTS* events = new EVENTS(spath);
+				events->compute_path_events();
+				events->compute_boundary_events(spt_s,spt_t);
 
-				find_shortest_path_tree(point_list.size()-2);
-				
+				Events = *events;
+  				printf("done computing the boundary and path events!\n");
 			}
 			glutPostRedisplay();
 		}
 	}
-
 }
 
 
@@ -781,10 +772,13 @@ void clear_test_points() {
 	test_points = vector<Point>();
 	selected_triangle = vector<int>();
 	sequence_diagonal = vector<int>();
+	shortest_path = vector<Point>();
+	Events = *(new EVENTS());
 }
 void clear_test_points(unsigned char key, int x, int y) {
 	switch (key) {
 	case ' ':
+		shortest_path = vector<Point>(); 
 		clear_test_points();
 		break;
 	}
@@ -871,22 +865,12 @@ void display_chain(Chain * chain) {
 }
 void display_string(String * s) {
 	display_chain(s->get_chain());
-	/*int c_num = s->get_children_number();
-	if (c_num == 0) {
-		display_chain(s->get_chain());
-	}
-	else {
-		if (c_num > 0) {
-			display_string(s->get_left_string());
-		}
-		if (c_num > 1) {
-			display_string(s->get_middle_string());
-		}
-		if (c_num > 2) {
-			display_string(s->get_right_string());
-		}
-	}*/
 	return;
+}
+
+void set_color_rgb(int r, int g, int b)
+{
+	glColor3f(r / 255.0, g / 255.0, b / 255.0);
 }
 void display() {
 
@@ -901,47 +885,64 @@ void display() {
 	glClearColor(1.0, 1.0, 1.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 	gluOrtho2D(min_x, max_x, min_y, max_y);
-
-	
-	glLineWidth(8);
-	glPointSize(5.0f);
 	glEnable(GL_POINT_SMOOTH);
+	glEnable(GL_POLYGON_SMOOTH);
 
-	
-	glColor3f(1, float(0.7137), float(0.7568)); 
-
+	/* Drawing the Polygon Boundary */
+	glLineWidth(4);
+	glPointSize(5.0f);
+	set_color_rgb(52, 152, 219);
 	glBegin(GL_LINE_LOOP);
 	for (int i = 0; i < v_num; i++)
-	{
 		glVertex2d(point_list[i].get_x(), point_list[i].get_y());
-	}
 	glEnd();
 
+
+	/* Marks the first vertex (index 0) of the polygon ( a Black dot ) */
 	glColor3f(0.0f, 0.0f, 0.0f);
 	glBegin(GL_POINTS);
 	glVertex2d(point_list[0].get_x(), point_list[0].get_y());
 	glEnd();
 
-	glColor3f(0.5f, 0.7f, 0.30f);
-	glBegin(GL_POINTS);
-	for (int i = 1; i < v_num; i++)
-	{
-		glVertex2d(point_list[i].get_x(), point_list[i].get_y());
-	}
-	glEnd();
-
-	glLineWidth(3);//every diagonal
+	/* Draws the diagonals of the polygon */
+	glLineWidth(3);
 	glColor3f(float(0.6), float(0.6), float(0.6));
 	for (int i = 0; i < (int)(diagonal_list.size()); i++) {;
 		display_edge(diagonal_list[i]);
 	}
 	
-	glColor3f(1.0f, 0.0f, 1.0f);
-	for (int i = 0; i < (int)sequence_diagonal.size(); i++) {
-		display_edge(diagonal_list[sequence_diagonal[i]]);
+	/* Mark the boundary events (path events overlap with the shortest path) */
+	glLineWidth(3);
+	set_color_rgb(152, 219, 52); //green
+	vector<vector<LOS*>> Queue = Events.get_queue();
+	glBegin(GL_LINES);
+	for (int i = 0; i < Queue.size(); i++)
+	{
+		for (int j = 1; j < Queue[i].size(); j++)
+		{
+			glVertex2d(point_list[Queue[i][j]->get_endpoint1()].get_x(), point_list[Queue[i][j]->get_endpoint1()].get_y());
+			glVertex2d(point_list[Queue[i][j]->get_endpoint2()].get_x(), point_list[Queue[i][j]->get_endpoint2()].get_y());
+		}
 	}
+	glEnd();
+
+	/* Mark the extensions of the boundary events */
+	set_color_rgb(242, 200, 228); //green
+	glBegin(GL_LINES);
+	for (int i = 0; i < Queue.size(); i++)
+	{
+		for (int j = 1; j < Queue[i].size(); j++)
+		{
+			glVertex2d(point_list[Queue[i][j]->get_endpoint1()].get_x(), point_list[Queue[i][j]->get_endpoint1()].get_y());
+			glVertex2d((Queue[i][j]->get_other_endpoint()).get_x(), (Queue[i][j]->get_other_endpoint()).get_y());
+		}
+	}
+	glEnd();
 	
-	glColor3f(0.5f, 0.2f, 0.9f);
+
+	/* Draws the shortest path computed using the shortest path tree */
+	set_color_rgb(219, 52, 152);
+	glLineWidth(4);
 	glBegin(GL_LINES);
 	for (int i = 0; i < (int)shortest_path.size()-1; i++)
 	{
@@ -951,11 +952,13 @@ void display() {
 	glEnd();
 
 
+
+	/* Emphasizes the two test points (start and end vertices of the shortest path) */
 	glColor3d(0, 0.47, 0.43);
-	
-	for (int t = 0; t <(int)test_points.size(); t++) {
+	for (int t = 0; t <(int)test_points.size(); t++)
 		display_point(test_points[t]);
-	}
+	
+	/*
 	if (test_points.size() >= 2) {
 		glColor3f(0.0f, 1.0f, 0.0f);
 		Chain ** first_chain = final_hour.get_first_chain();
@@ -978,55 +981,21 @@ void display() {
 		for (int i = 0; i < 2; i++) {
 			display_edge(e_list[i]);
 		}
-	}
+	}*/
 	
+
+	/* Emphasizes the vertices of the polygon boundary */
+	glColor3f(0.5f, 0.7f, 0.30f);
+	glColor3f(1, 1, 0);
+	glBegin(GL_POINTS);
+	for (int i = 1; i < v_num; i++)
+		glVertex2d(point_list[i].get_x(), point_list[i].get_y());
+	glEnd();
+
+
+
 	glutSwapBuffers();
 	return;
-
-	/*glBegin(GL_LINE_LOOP);
-	for (int i = 0; i < 3; i++)
-	glVertex2d(point_list[bigT[i]].get_x(), point_list[bigT[i]].get_y());
-	glEnd();
-	*/
-
-	/*
-	for (int i = 0; i < (int)outer_diagonal_list.size(); i++) {
-	int origin = outer_diagonal_list[i].get_origin();
-	int dest = outer_diagonal_list[i].get_dest();
-	glBegin(GL_LINES);
-	glVertex2d(point_list[origin].get_x(), point_list[origin].get_y());
-	glVertex2d(point_list[dest].get_x(), point_list[dest].get_y());
-	glEnd();
-	}*/
-
-	/*glEnable(GL_POINT_SMOOTH);
-	glColor3d(0, 0.47, 0.43);
-	glBegin(GL_POINTS); //starts drawing of points
-	glVertex2d(test_points[t].get_x(), test_points[t].get_y());
-	glEnd();
-
-	glColor3d(0, 0, 1);
-	if (selected_triangle[t] == -1) {
-	continue;
-	}
-	else if (selected_triangle[t] >= t_num) {
-	glBegin(GL_LINE_LOOP);
-	for (int i = 0; i < 3; i++) {
-	Point p = point_list[outer_polygon_list[selected_triangle[t] - t_num][i]];
-	glVertex2d(p.get_x(), p.get_y());
-	}
-	glEnd();
-	}
-	else {
-	glBegin(GL_LINE_LOOP);
-	for (int i = 0; i < 3; i++) {
-	Point p = point_list[polygon_list[selected_triangle[t]][i]];
-	glVertex2d(p.get_x(), p.get_y());
-	}
-	glEnd();
-	}
-	*/
-
 }
 int read_file(const string filePath) {
 	ifstream openFile(filePath.data());

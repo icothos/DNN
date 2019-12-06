@@ -390,6 +390,20 @@ void preprocess_polygon()
 	
 }
 
+string makeMeString(GLint versionRaw) {
+	stringstream ss;
+	string str = "\0";
+
+	ss << versionRaw;    // transfers versionRaw value into "ss"
+	str = ss.str();        // sets the "str" string as the "ss" value
+	return str;
+}
+void formatMe(string* text) {
+	string dot = ".";
+
+	text->insert(1, dot); // transforms 30000 into 3.0000
+	text->insert(4, dot); // transforms 3.0000 into 3.00.00
+}
 int main(int argc, char **argv) {
 	polygon_list = vector<vector<int>>();
 	diagonal_list = vector<Edge>();
@@ -501,36 +515,8 @@ hourglass.set_string(new String(string));
 return hourglass;
 }
 
-Point foot_of_perpendicular(int p, Edge e)
-{
-	Point pp = point_list[p];
-	Point origin = point_list[e.get_origin()];
-	Point dest = point_list[e.get_dest()];
 
-	double ax = origin.get_x();
-	double ay = origin.get_y();
-	double bx = dest.get_x();
-	double by = dest.get_y();
-	double px = pp.get_x();
-	double py = pp.get_y();
-
-	if (ax == bx) //vertical line
-	{
-		return Point(ax, py);
-	}
-	else if (ay == by)//horizontal line
-	{
-		return Point(px, ay);
-	}
-	else {
-		double slope = (double)(ay - by) / (ax - bx);
-		double qx = slope / (1 + slope * slope)*(py + (double)px / slope + slope * ax - ay);
-		double qy = ay + slope * (qx - ax);
-
-		return Point(qx, qy);
-	}
-}
-
+/*
 void shortest_path_point_to_line(int p, Edge e)
 {
 	shortest_path = vector<Point>();
@@ -613,7 +599,7 @@ void shortest_path_point_to_line(int p, Edge e)
 	}
 	return;
 }
-
+*/
 Hourglass find_shortest_path(int p1, int p2) //input : two test points , returns final hourglass(string) representing shortest path of the two points
 {
 	selected_triangle = vector<int>();
@@ -715,7 +701,7 @@ Hourglass find_shortest_path_test_points()
 
 	return final_hourglass;
 }
-
+/*
 void shortest_path_to_line(Point p, Point e1, Point e2)
 {
 	point_list.push_back(p);
@@ -725,7 +711,7 @@ void shortest_path_to_line(Point p, Point e1, Point e2)
 	point_list.pop_back();
 	point_list.pop_back();
 	point_list.pop_back();
-}
+}*/
 
 void add_test_point(int button, int state, int x, int y) {
 	if (state == GLUT_DOWN) {
@@ -753,9 +739,9 @@ void add_test_point(int button, int state, int x, int y) {
 				SPT* spt_t = new SPT(point_list.size() - 1, point_list.size() - 2);
 				vector<int> tpath = spt_t->compute_shortest_path_default();
 
-				EVENTS* events = new EVENTS(spath);
+				EVENTS* events = new EVENTS(spath, spt_s, spt_t);
 				events->compute_path_events();
-				events->compute_boundary_events(spt_s,spt_t);
+				events->compute_boundary_events();
 
 				Events = *events;
   				printf("done computing the boundary and path events!\n");

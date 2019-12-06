@@ -10,6 +10,8 @@
 using namespace std;
 
 int line_of_sight_id;
+bool check_penetration(int from, int to, int apex, int first, int second);
+Point foot_of_perpendicular(int p, Point origin, Point dest);
 
 float compute_slope(int _p1, int _p2)
 {
@@ -45,8 +47,9 @@ class LOS {
 	float slope;
 	float path_event_angle; //the angle between the previous path event (used to sort the boundary events)
 	int rotation_vertex;
-	vector<int> pi_s_l;//shortest path from s to l
-	vector<int> pi_t_l;//shortest path from t to l
+	vector<int> pi_s_l;//shortest path from s to l (only the polygon vertices registered in point_list)
+	vector<int> pi_t_l;//shortest path from t to l (only the polygon vertices registered in point_list)
+	Point foot;
 public:
 	LOS(int _id, int p1, int p2, int rot_vertex,float angle, event_type _type)
 	{
@@ -87,34 +90,137 @@ public:
 	{
 		return type;
 	}
-	void compute_shortest_path_to_los(SPT* spt);
+	void compute_shortest_path_to_los(bool spt_s, vector<int> point_to_apex, vector<int> chain1, vector<int> chain2);
 	bool compute_other_endpoint();
 };
-
-void LOS::compute_shortest_path_to_los(SPT* spt)
+/*
+Point foot_of_perpendicular(int p, Edge e)
 {
-	//two polygon vertices (endpoint1 and endpoint2)
-	vector<int> sp1 = spt->compute_shortest_path(endpoint1);
-	vector<int> sp2 = spt->compute_shortest_path(endpoint2);
+	Point pp = point_list[p];
+	Point origin = point_list[e.get_origin()];
+	Point dest = point_list[e.get_dest()];
 
-	//find last common vertex and push until there
+	double ax = origin.get_x();
+	double ay = origin.get_y();
+	double bx = dest.get_x();
+	double by = dest.get_y();
+	double px = pp.get_x();
+	double py = pp.get_y();
 
-	//make funnel with last common vertex as apex
+	if (ax == bx) //vertical line
+	{
+		return Point(ax, py);
+	}
+	else if (ay == by)//horizontal line
+	{
+		return Point(px, ay);
+	}
+	else {
+		double slope = (double)(ay - by) / (ax - bx);
+		double qx = slope / (1 + slope * slope) * (py + (double)px / slope + slope * ax - ay);
+		double qy = ay + slope * (qx - ax);
+
+		return Point(qx, qy);
+	}
+}*/
+
+
+/* Returns the foot of perpendicular from point p to edge (p1, p2) */
+Point foot_of_perpendicular(int p, Point origin, Point dest)
+{
+	Point pp = point_list[p];
+	double ax = origin.get_x();
+	double ay = origin.get_y();
+	double bx = dest.get_x();
+	double by = dest.get_y();
+	double px = pp.get_x();
+	double py = pp.get_y();
+
+	if (ax == bx) //vertical line
+	{
+		return Point(ax, py);
+	}
+	else if (ay == by)//horizontal line
+	{
+		return Point(px, ay);
+	}
+	else {
+		double slope = (double)(ay - by) / (ax - bx);
+		double qx = slope / (1 + slope * slope) * (py + (double)px / slope + slope * ax - ay);
+		double qy = ay + slope * (qx - ax);
+
+		return Point(qx, qy);
+	}
 }
 
-
+/* Returns whether vector(from,to) is  in the smaller angle that the two vectors v(apex,first) and v(apex,second) make */
 bool check_penetration(int from, int to, int apex, int first, int second)
 {
 	double firstA = calculate_angle_between(apex, first, from, to);
 	double secondA = calculate_angle_between(apex, second, from, to);
 
-	if (firstA*secondA > 0)
+	if (firstA * secondA > 0)
 		return false;
 	else if (abs(firstA) + abs(secondA) >= PI)
 		return false;
 	else
 		return true;
 }
+
+/* computes the shortest path from the root of the spt to the line of sight*/
+void LOS::compute_shortest_path_to_los(bool spt_s, vector<int> point_to_apex, vector<int> chain1, vector<int> chain2)
+{
+	if (chain1.front() != chain2.front() || chain1.size() < 2 || chain2.size() < 2)
+	{
+		printf("not a valid chain (compute_shortest_path_to_los)\n");
+		exit(35);
+	}
+
+	//Inserts into the shortest path all the vertices from the root to the common apex
+	vector<int> shortest_path(point_to_apex);
+
+	//calculate the foot of perpendicular
+	int apex = chain1[0];
+	Point foot = (type == PATH) ? foot_of_perpendicular(apex, point_list[endpoint1], point_list[endpoint2]) : foot_of_perpendicular(apex, point_list[endpoint1], other_endpoint);
+	int foot_idx = point_list.size();
+	point_list.push_back(foot);
+	
+	bool direct = check_penetration(apex, foot_idx, apex, chain1[1], chain2[1]);
+	if (direct)
+	{
+		this->foot = foot;
+		point_list.pop_back();
+		return;
+	}
+	vector<int> main_chain = (calculate_angle_between_positive(apex, chain1[1], apex, foot_idx) > calculate_angle_between_positive(apex, chain2[1], apex, foot_idx))
+		? chain2 : chain1;
+	bool side = is_left(apex, foot_idx, main_chain[1]);
+	for (int i = 1; i < main_chain.size()-1; i++)
+	{
+		apex = main_chain[i];
+		shortest_path.push_back(apex);
+		point_list.pop_back();
+		//foot = recalculate new foot of perpendicular
+		foot = (type == PATH) ? foot_of_perpendicular(apex, point_list[endpoint1], point_list[endpoint2]) : foot_of_perpendicular(apex, point_list[endpoint1], other_endpoint);
+		point_list.push_back(foot);
+
+		//check if our foot is correct
+		if (side != is_left(apex, foot_idx, main_chain[i + 1]))
+		{
+			//chosen
+			point_list.pop_back();
+			return;
+		}
+	}
+
+	// no foot of perpendicular
+	point_list.pop_back();
+	foot = point_list[main_chain.back()];
+	return;
+	
+}
+
+
 /* returns the index of the triangle in polygon_list that (endpoint, rotation) penentrates through
    @rotation : the rotation vertex
    @endpoint : the other vertex of the boundary event
@@ -288,7 +394,7 @@ class EVENTS {
 	SPT* spt_t;
 public:
 	EVENTS() {}
-	EVENTS(vector<int> _shortest_path)
+	EVENTS(vector<int> _shortest_path, SPT* _spt_s, SPT* _spt_t)
 	{
 		next_line_id = 0;
 		shortest_path = _shortest_path;
@@ -296,6 +402,8 @@ public:
 		{
 			queue.push_back(vector<LOS*>());
 		}
+		spt_s = _spt_s;
+		spt_t = _spt_t;
 	}
 	vector<int> get_shortest_path()
 	{
@@ -305,7 +413,7 @@ public:
 		return queue;
 	}
 	void compute_path_events();
-	void compute_boundary_events(SPT* spt_s, SPT* spt_t);
+	void compute_boundary_events();
 	void compute_bend_events();
 	void sort_boundary_events();
 };
@@ -383,12 +491,8 @@ bool is_tangent(int prev, int cur, int next, int p)
 
 /* computes all boundary events
 	sorts the boundary events by slope after inserting into the queue */
-void EVENTS::compute_boundary_events(SPT* spt_s, SPT* spt_t)
+void EVENTS::compute_boundary_events()
 {
-	//set the shortest path trees for the event class
-	this->spt_s = spt_s;
-	this->spt_t = spt_t;
-
 	//search the tree for candidates 
 	for (int i = 1; i < shortest_path.size()-1; i++)
 	{

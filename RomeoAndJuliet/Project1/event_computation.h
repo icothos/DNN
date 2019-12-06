@@ -45,6 +45,8 @@ class LOS {
 	float slope;
 	float path_event_angle; //the angle between the previous path event (used to sort the boundary events)
 	int rotation_vertex;
+	vector<int> pi_s_l;//shortest path from s to l
+	vector<int> pi_t_l;//shortest path from t to l
 public:
 	LOS(int _id, int p1, int p2, int rot_vertex,float angle, event_type _type)
 	{
@@ -85,9 +87,20 @@ public:
 	{
 		return type;
 	}
+	void compute_shortest_path_to_los(SPT* spt);
 	bool compute_other_endpoint();
 };
 
+void LOS::compute_shortest_path_to_los(SPT* spt)
+{
+	//two polygon vertices (endpoint1 and endpoint2)
+	vector<int> sp1 = spt->compute_shortest_path(endpoint1);
+	vector<int> sp2 = spt->compute_shortest_path(endpoint2);
+
+	//find last common vertex and push until there
+
+	//make funnel with last common vertex as apex
+}
 
 
 bool check_penetration(int from, int to, int apex, int first, int second)
@@ -222,7 +235,6 @@ bool LOS::compute_other_endpoint()
 {
 	int rotation = endpoint1;
 	int endpoint = endpoint2;
-	printf("%d %d\n", rotation, endpoint);
 	int vertex[2] = { -1,-1 };
 	
 	//compute triangle that the boundary event penetrates through
@@ -272,6 +284,8 @@ class EVENTS {
 	int next_line_id;
 	vector<vector<LOS*>> queue;
 	vector<int> shortest_path;
+	SPT* spt_s;
+	SPT* spt_t;
 public:
 	EVENTS() {}
 	EVENTS(vector<int> _shortest_path)
@@ -371,6 +385,10 @@ bool is_tangent(int prev, int cur, int next, int p)
 	sorts the boundary events by slope after inserting into the queue */
 void EVENTS::compute_boundary_events(SPT* spt_s, SPT* spt_t)
 {
+	//set the shortest path trees for the event class
+	this->spt_s = spt_s;
+	this->spt_t = spt_t;
+
 	//search the tree for candidates 
 	for (int i = 1; i < shortest_path.size()-1; i++)
 	{

@@ -1,0 +1,59 @@
+﻿  main.cpp
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\polygon_operation.h(104): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\polygon_operation.h(135): warning C4244: '초기화 중': 'point_type'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\polygon_operation.h(149): warning C4244: '초기화 중': 'point_type'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\polygon_operation.h(150): warning C4244: '초기화 중': 'point_type'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\polygon_operation.h(151): warning C4244: '초기화 중': 'point_type'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\polygon_operation.h(152): warning C4244: '초기화 중': 'point_type'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\polygon_operation.h(357): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\polygon_decomposition.h(247): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\polygon_decomposition.h(267): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\polygon_decomposition.h(326): warning C4267: '=': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\Chain.h(161): warning C4267: '=': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\Chain.h(353): warning C4267: 'return': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\tangent.h(170): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\tangent.h(171): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\tangent.h(272): warning C4267: '=': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\tangent.h(293): warning C4267: '=': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\tangent.h(347): warning C4267: '=': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\tangent.h(382): warning C4267: '=': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\tangent.h(431): warning C4267: '=': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\tangent.h(452): warning C4267: '=': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\tangent.h(507): warning C4267: '=': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\tangent.h(543): warning C4267: '=': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\hourglass_operation.h(54): warning C4267: '=': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\hourglass_operation.h(63): warning C4267: '=': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\hourglass_operation.h(86): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\hourglass_operation.h(95): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\hourglass_operation.h(151): warning C4267: '인수': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\ShortestPathTree.h(306): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\ShortestPathTree.h(308): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\ShortestPathTree.h(309): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\ShortestPathTree.h(312): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\ShortestPathTree.h(313): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\ShortestPathTree.h(320): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\ShortestPathTree.h(353): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\ShortestPathTree.h(354): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\ShortestPathTree.h(329): warning C4101: 'pred' :참조되지 않은 지역 변수입니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\main.cpp(280): warning C4244: '인수': 'point_type'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\main.cpp(287): warning C4244: '인수': 'point_type'에서 'GLfloat'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\main.cpp(296): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\main.cpp(297): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\main.cpp(376): warning C4267: '=': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\main.cpp(414): warning C4996: 'scanf': This function or variable may be unsafe. Consider using scanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\ucrt\stdio.h(1272): note: 'scanf' 선언을 참조하십시오.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\main.cpp(421): warning C4996: 'scanf': This function or variable may be unsafe. Consider using scanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\ucrt\stdio.h(1272): note: 'scanf' 선언을 참조하십시오.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\main.cpp(572): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\main.cpp(735): warning C4267: '인수': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\main.cpp(758): warning C4267: '=': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\main.cpp(768): warning C4267: '인수': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.20.27508\include\numeric(783): warning C4267: '=': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+  C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\polygon_decomposition.h(321): note: 컴파일 중인 함수 템플릿 인스턴스화 'void std::iota<std::_Vector_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>,unsigned __int64>(_FwdIt,_FwdIt,unsigned __int64)'에 대한 참조를 확인하십시오.
+          with
+          [
+              _Ty=int,
+              _FwdIt=std::_Vector_iterator<std::_Vector_val<std::_Simple_types<int>>>
+          ]
+C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\Project1\ShortestPathTree.h(294): warning C4715: 'choose_v': 모든 제어 경로에서 값을 반환하지는 않습니다.
+  Project1.vcxproj -> C:\Users\Spock_the_Wizard\RomeoJuliet\RomeoAndJuliet\x64\Debug\Project1.exe

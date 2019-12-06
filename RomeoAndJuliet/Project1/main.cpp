@@ -383,6 +383,21 @@ void preprocess_polygon()
 	diagonal_list = vector<Edge>(diagonal_list.begin(), diagonal_list.begin() + d_size);
 	
 }
+
+string makeMeString(GLint versionRaw) {
+	stringstream ss;
+	string str = "\0";
+
+	ss << versionRaw;    // transfers versionRaw value into "ss"
+	str = ss.str();        // sets the "str" string as the "ss" value
+	return str;
+}
+void formatMe(string* text) {
+	string dot = ".";
+
+	text->insert(1, dot); // transforms 30000 into 3.0000
+	text->insert(4, dot); // transforms 3.0000 into 3.00.00
+}
 int main(int argc, char **argv) {
 	polygon_list = vector<vector<int>>();
 	diagonal_list = vector<Edge>();
@@ -782,6 +797,25 @@ void print_result(int argc, char **argv) {
 	glutInitWindowSize(800, 800);//창 크기 설정
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
 	glutCreateWindow("Shortest Path in a simple Polygon");
+
+	char* versionGL = '\0';
+	GLint versionFreeGlutInt = 0;
+
+	versionGL = (char*)(glGetString(GL_VERSION));
+	versionFreeGlutInt = (glutGet(GLUT_VERSION));
+
+	string versionFreeGlutString = makeMeString(versionFreeGlutInt);
+	formatMe(&versionFreeGlutString);
+
+	cout << endl;
+	cout << "OpenGL version: " << versionGL << endl << endl;
+	cout << "FreeGLUT version: " << versionFreeGlutString << endl << endl;
+
+	cout << "GLEW version: " <<
+		GLEW_VERSION << "." << GLEW_VERSION_MAJOR << "." <<
+		GLEW_VERSION_MINOR << "." << GLEW_VERSION_MICRO << endl;
+
+
 	glutReshapeFunc(reshape);
 	glutDisplayFunc(display);
 	glutMouseFunc(add_test_point);

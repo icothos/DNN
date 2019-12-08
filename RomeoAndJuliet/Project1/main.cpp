@@ -45,6 +45,9 @@ vector<Point> polygon_boundary;
 
 //global variables for display using openGL functions
 vector<Point> shortest_path;
+vector<Point> shortest_path_to_line;
+int firstIdx = 0;
+int secondIdx = 0;
 EVENTS Events;
 
 
@@ -764,6 +767,7 @@ void clear_test_points() {
 	selected_triangle = vector<int>();
 	sequence_diagonal = vector<int>();
 	shortest_path = vector<Point>();
+	shortest_path_to_line = vector<Point>();
 	Events = *(new EVENTS());
 }
 void clear_test_points(unsigned char key, int x, int y) {
@@ -771,6 +775,18 @@ void clear_test_points(unsigned char key, int x, int y) {
 	case ' ':
 		shortest_path = vector<Point>(); 
 		clear_test_points();
+		break;
+	case 'g':
+		int size = Events.get_queue().size();
+		int subSize = Events.get_queue()[firstIdx].size();
+		if (++secondIdx >= subSize)
+		{
+			secondIdx = 0;
+			firstIdx++;
+			if (firstIdx >= size)
+				firstIdx = 0;
+		}
+		shortest_path_to_line = Events.get_queue()[firstIdx][secondIdx]->get_shortest_path_to_line(true);
 		break;
 	}
 	glutPostRedisplay();
@@ -930,6 +946,16 @@ void display() {
 	}
 	glEnd();
 	
+	/* Testing out the shortest path to line algorithm */
+	set_color_rgb(49, 22, 100);
+	glLineWidth(4);
+	glBegin(GL_LINES);
+	for (int i = 0; i < (int)shortest_path_to_line.size() - 1; i++)
+	{
+		glVertex2d(shortest_path_to_line[i].get_x(), shortest_path_to_line[i].get_y());
+		glVertex2d(shortest_path_to_line[i + 1].get_x(), shortest_path_to_line[i + 1].get_y());
+	}
+	glEnd();
 
 	/* Draws the shortest path computed using the shortest path tree */
 	set_color_rgb(219, 52, 152);

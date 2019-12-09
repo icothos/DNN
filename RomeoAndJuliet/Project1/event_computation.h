@@ -163,6 +163,7 @@ void EVENTS::compute_boundary_events()
 }
 
 /* Sets the foot_bool, pi_s_l, pi_t_l for the given los in the queue */
+/*
 void EVENTS::compute_shortest_path_to_line(int i, int j)
 {
 	LOS* los = queue[i][j];
@@ -190,6 +191,20 @@ void EVENTS::compute_shortest_path_to_line(int i, int j)
 
 		//first get the shortest path from s to the other_vertex
 		vector<int> s_to_other_endpoint;
+		int max_size = s_to_e1.size() <= s_to_e2.size() ? s_to_e1.size() : s_to_e2.size();
+		int apex_idx = 0;
+		for (apex_idx; apex_idx < max_size; apex_idx++)
+		{
+			if (s_to_e1[apex_idx] != s_to_e2[apex_idx])
+				break;
+		}
+		s_to_other_endpoint.insert(s_to_other_endpoint.end(),s_to_e1.begin(), (s_to_e1.begin() + apex_idx));
+		vector<int> temp1, temp2;
+		temp1.insert(temp1.end(), s_to_e1.begin() + apex_idx, s_to_e1.end());
+		temp2.insert(temp2.end(), s_to_e2.begin() + apex_idx, s_to_e2.end());
+		get_remaining_path(temp1, temp2, los)
+
+
 		for (int i = 0; i < s_to_e1.size(); i++)
 		{
 			if (s_to_e1[i] == s_to_e2[i])
@@ -209,84 +224,9 @@ void EVENTS::compute_shortest_path_to_line(int i, int j)
 		los->set_foot_bool(false);
 	}
 	
-}
+}*/
 
-/* Chain1 and 2 are chains of the funnel each with the apex as its first member*/
-void get_remaining_path(vector<int> chain1, vector<int> chain2, vector<int>* final_path,Point* Foot)
-{
-	int apex = chain1[0];
 
-	int foot_idx = point_list.size();
-	Point foot = foot_of_perpendicular(apex, point_list[chain1.back()], point_list[chain2.back()]);
-	point_list.push_back(foot);
-	bool direct = check_penetration(apex, foot_idx, apex, chain1[1], chain2[1]);
-	
-
-	if (direct) {
-		*Foot = foot; 
-		point_list.pop_back();
-		return;
-	}
-
-	vector<int> main_chain = (calculate_angle_between_positive(apex, chain1[1], apex, foot_idx) > calculate_angle_between_positive(apex, chain2[1], apex, foot_idx))
-		? chain2 : chain1;
-	bool side = is_left(main_chain[1], apex, foot_idx);/////////////not sure about the order of the arguments
-	point_list.pop_back();
-
-	for (int i = 1; i < main_chain.size() - 1; i++)
-	{
-		apex = main_chain[i];
-		final_path->push_back(apex);
-		//only for the boundary case
-		foot = foot_of_perpendicular(apex, point_list[chain1.back()], point_list[chain2.back()]);
-		point_list.push_back(foot);
-		if (side != is_left(main_chain[i + 1], apex, foot_idx))
-		{
-			//correct foot
-			*Foot = foot;
-			point_list.pop_back();
-			return;
-		}
-		point_list.pop_back();
-	}
-
-	//no foot of perpendicular
-	final_path->pop_back();
-	*Foot = point_list[main_chain.back()];
-	return;
-	
-
-	/*
-	int apex_index;
-	int max_size = chain1.size() >= chain2.size() ? chain1.size() : chain2.size();
-	
-	if(chain1[0]!=chain2[0])
-		printf("this is an error\n");
-	
-	for (apex_index = 1; apex_index < max_size; apex_index++)
-	{
-		if (chain1[apex_index] != chain2[apex_index])
-		{
-			apex_index--;
-			break;
-		}
-	}
-	
-	if (apex_index < 0)
-	{
-		printf("something went wrong here\n");
-		exit(94);
-	}
-
-	for (int i = 0; i <= apex_index; i++)
-		final_path->push_back(chain1[i]);
-
-	int foot_idx = point_list.size();
-	point_list.push_back(*foot);
-	vector<int> main_chain = calculate_angle_between_positive()
-	point_list.pop_back();*/
-
-}
 void EVENTS::compute_bend_events()
 {
 	for (int i = 0; i < queue.size(); i++)
@@ -295,20 +235,7 @@ void EVENTS::compute_bend_events()
 		{
 			LOS* los = queue[i][j];
 			
-			vector<int> s_to_e1 = spt_s->retrieve_shortest_path(los->get_endpoint1());
-			vector<int> s_to_e2 = spt_s->retrieve_shortest_path(los->get_endpoint2());
-
-			vector<int> chain1, chain2, common_chain;
-
-			int last_common_index;
-			for (last_common_index = 0; last_common_index<s_to_e1.size() && last_common_index<s_to_e2.size() &&
-				s_to_e1.at(last_common_index) == s_to_e2.at(last_common_index); last_common_index++)
-			{
-				common_chain.push_back(s_to_e1[last_common_index]);
-			}
-			chain1.insert(chain1.end(), s_to_e1.begin() + last_common_index-1, s_to_e1.end());
-			chain2.insert(chain2.end(), s_to_e2.begin() + last_common_index-1, s_to_e2.end());
-			los->compute_shortest_path_to_los(true, common_chain, chain1, chain2);
+			los->compute_shortest_path_to_los(shortest_path, spt_s);
 
 
 			//the same for s_to_e2

@@ -93,7 +93,10 @@ double calculate_angle_between_positive(int p1, int p2, int q1, int q2)
 {
 	double angle = calculate_angle_between(p1, p2, q1, q2);
 	if (angle < 0)
-		angle += PI;
+		angle = -angle;
+
+	if (angle > PI / 2)
+		angle = PI - angle;
 
 	return angle;
 }

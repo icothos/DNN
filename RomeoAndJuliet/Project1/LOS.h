@@ -47,7 +47,8 @@ class LOS {
 	vector<int> pi_t_l;//shortest path from t to l (only the polygon vertices registered in point_list)
 	Point foot;
 	bool foot_is_P_vertex;
-	int polygon_edge; //vertex of the edge that the `other_endpoint' passes through
+	int e1; //vertex of the edge that the `other_endpoint' passes through
+	int e2;
 public:
 	LOS(int _id, int p1, int p2, int rot_vertex, float angle, event_type _type)
 	{
@@ -72,10 +73,7 @@ public:
 	{
 		return other_endpoint;
 	}
-	int get_polygon_edge()
-	{
-		return polygon_edge;
-	}
+	
 	/*
 	float get_slope()
 	{
@@ -105,9 +103,11 @@ public:
 	{
 		foot_is_P_vertex = is_polygon_vertex;
 	}
-	void compute_shortest_path_to_los(bool spt_s, vector<int> point_to_apex, vector<int> chain1, vector<int> chain2);
+	void compute_shortest_path_to_los(vector<int> shortest_path, SPT* spt);
 	bool compute_other_endpoint();
 	vector<Point> get_shortest_path_to_line(bool s_to_l);
+	Point* get_endpoint(int from, int to, int tri, int vertex1, int vertex2);
+	vector<int> compute_shortest_path_line_nonP_vertex(Point vertex, SPT* spt, int e1, int e2);
 };
 /*
 Point foot_of_perpendicular(int p, Edge e)
@@ -241,7 +241,7 @@ void get_remaining_path(vector<int> chain1, vector<int> chain2, vector<int>* fin
 }
 
 
-vector<int> compute_shortest_path_line_nonP_vertex(Point vertex, SPT* spt, int e1, int e2)
+vector<int> LOS::compute_shortest_path_line_nonP_vertex(Point vertex, SPT* spt, int e1, int e2)
 {
 	vector<int> shortest_path;
 	vector<int> _e1 = spt->retrieve_shortest_path(e1);
@@ -258,10 +258,13 @@ vector<int> compute_shortest_path_line_nonP_vertex(Point vertex, SPT* spt, int e
 	//the common path for the two points of the edge (e1, e2) -> inserted from the beginning to the apex
 	shortest_path.insert(shortest_path.end(), _e1.begin(), _e1.begin() + idx);
 
+	
 	//the different part
 	vector<int> temp1(_e1.begin() + idx-1, _e1.end());
 	vector<int> temp2(_e2.begin() + idx-1, _e2.end());
 
+	if (temp1.size() == 1 || temp2.size() == 1)
+		return shortest_path;
 	int v_id = point_list.size();
 	point_list.push_back(vertex);
 	bool success = check_penetration(shortest_path.back(), v_id, temp1[0], temp1[1], temp2[1]);
@@ -274,7 +277,10 @@ vector<int> compute_shortest_path_line_nonP_vertex(Point vertex, SPT* spt, int e
 
 	vector<int>* main_chain;
 	int apex = temp1[0];
-	if(calculate_angle_between_positive(apex,v_id,apex,temp1[1])>calculate_angle_between_positive(apex, v_id,apex,temp2[1]))
+	double temp1A = calculate_angle_between_positive(apex, v_id, apex, temp1[1]);
+	double temp2A = calculate_angle_between_positive(apex, v_id, apex, temp2[1]);
+	if(temp1A > temp2A)
+	//if(calculate_angle_between_positive(apex,v_id,apex,temp1[1])>calculate_angle_between_positive(apex, v_id,apex,temp2[1]))
 		main_chain = &temp2;
 	else
 		main_chain = &temp1;
@@ -286,7 +292,7 @@ vector<int> compute_shortest_path_line_nonP_vertex(Point vertex, SPT* spt, int e
 	{
 		apex = main_chain->at(i);
 		shortest_path.push_back(apex);
-		if (is_Left(point_list[main_chain->at(i + 1)], point_list[apex], vertex))
+		if (left!=is_Left(point_list[main_chain->at(i + 1)], point_list[apex], vertex))
 		{
 			return shortest_path;
 		}
@@ -310,7 +316,7 @@ void LOS::compute_shortest_path_to_los(vector<int> shortest_path, SPT* spt)
 	{
 		//shortest path from s to the rotation vertex
 		vector<int> s_to_v = spt->retrieve_shortest_path(rotation_vertex);
-		vector<int> s_to_other_endpoint = compute_shortest_path_line_nonP_vertex(other_endpoint, spt, polygon_edge, (polygon_edge == 0) ? (v_num - 1) : (polygon_edge - 1));
+		vector<int> s_to_other_endpoint = compute_shortest_path_line_nonP_vertex(other_endpoint, spt, e1,e2);
 		
 		//now let's compute the shortest path to (v,other_endpoint)
 
@@ -465,7 +471,7 @@ Point* get_line_intersection(int p1, int p2, int q1, int q2)
 	return &newP;
 }
 
-Point * get_endpoint(int from, int to, int tri, int vertex1, int vertex2, int* polygon_edge)
+Point * LOS::get_endpoint(int from, int to, int tri, int vertex1, int vertex2)
 {
 	Triangle triangle = t_list[tri];
 	int* diag_list = triangle.get_d_list();
@@ -494,13 +500,8 @@ Point * get_endpoint(int from, int to, int tri, int vertex1, int vertex2, int* p
 	//check if polygon edge
 	int diff = abs(chosen_vertex - other_vertex);
 	if (diff == 1 || diff == (v_num - 1)) {
-
-		if (diff == v_num - 1)
-			* polygon_edge = 0;
-		else
-		{
-			*polygon_edge = chosen_vertex > other_vertex ? chosen_vertex : other_vertex;
-		}
+		e1 = chosen_vertex;
+		e2 = other_vertex;
 		return get_line_intersection(from, to, chosen_vertex, other_vertex);
 	}
 	else
@@ -520,7 +521,7 @@ Point * get_endpoint(int from, int to, int tri, int vertex1, int vertex2, int* p
 		else
 			new_tri = diagonal_list[diag].get_triangle()[0];
 
-		return get_endpoint(from, to, new_tri, chosen_vertex, other_vertex, polygon_edge);
+		return get_endpoint(from, to, new_tri, chosen_vertex, other_vertex);
 	}
 }
 
@@ -541,6 +542,8 @@ bool LOS::compute_other_endpoint()
 	if (diff == 1 || diff == (v_num - 1))
 	{
 		other_endpoint = *get_line_intersection(rotation, endpoint, vertex[0], vertex[1]);
+		e1 = vertex[0];
+		e2 = vertex[1];
 		return true;
 	}
 	else
@@ -565,7 +568,7 @@ bool LOS::compute_other_endpoint()
 			new_tri = diagonal_list[diag].get_triangle()[0];
 
 
-		Point * ptr = get_endpoint(endpoint, rotation, new_tri, vertex[0], vertex[1], &polygon_edge);
+		Point * ptr = get_endpoint(endpoint, rotation, new_tri, vertex[0], vertex[1]);
 		if (ptr == NULL)
 			return false;
 		other_endpoint = *ptr;

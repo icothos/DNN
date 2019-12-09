@@ -45,7 +45,8 @@ class LOS {
 	int rotation_vertex;
 	vector<int> pi_s_l;//shortest path from s to l (only the polygon vertices registered in point_list)
 	vector<int> pi_t_l;//shortest path from t to l (only the polygon vertices registered in point_list)
-	Point foot;
+	Point foot_s;
+	Point foot_t;
 	bool foot_is_P_vertex;
 	int e1; //vertex of the edge that the `other_endpoint' passes through
 	int e2;
@@ -149,7 +150,7 @@ vector<Point> LOS::get_shortest_path_to_line(bool s_to_l)
 		sp.push_back(point_list[sp_line->at(i)]);
 	}
 
-	sp.push_back(foot);
+	sp.push_back(s_to_l?foot_s:foot_t);
 
 	return sp;
 }
@@ -198,11 +199,19 @@ bool check_penetration(int from, int to, int apex, int first, int second)
 
 void get_remaining_path(vector<int> chain1, vector<int> chain2, vector<int>* final_path, Point* Foot)
 {
-	int apex = chain1[0];
 
-	int foot_idx = point_list.size();
+
+	int apex = chain1[0];
 	Point foot = foot_of_perpendicular(apex, point_list[chain1.back()], point_list[chain2.back()]);
+
+	if (chain1.size() == 1 || chain2.size() == 1)
+	{
+		*Foot = foot;
+		return;
+	}
+	int foot_idx = point_list.size();
 	point_list.push_back(foot);
+	
 	bool direct = check_penetration(apex, foot_idx, apex, chain1[1], chain2[1]);
 
 
@@ -318,9 +327,30 @@ void LOS::compute_shortest_path_to_los(vector<int> shortest_path, SPT* spt)
 		vector<int> s_to_v = spt->retrieve_shortest_path(rotation_vertex);
 		vector<int> s_to_other_endpoint = compute_shortest_path_line_nonP_vertex(other_endpoint, spt, e1,e2);
 		
+		int idx = 0;
+		for (; idx < s_to_v.size() && idx < s_to_other_endpoint.size(); idx++)
+		{
+			if (s_to_v[idx] != s_to_other_endpoint[idx])
+				break;
+		}
+		pi_t_l.insert(pi_t_l.end(), s_to_v.begin(), s_to_v.begin() + idx);
+		vector<int> temp1(s_to_v.begin() + idx - 1, s_to_v.end());
+		vector<int> temp2(s_to_other_endpoint.begin() + idx - 1, s_to_other_endpoint.end());
+		get_remaining_path(temp1, temp2, &pi_t_l, &foot_t);
 		//now let's compute the shortest path to (v,other_endpoint)
 
 		//shortest path for (v, endpoint2)
+		vector<int> s_to_endpoint2 = spt->retrieve_shortest_path(endpoint2);
+		idx = 0;
+		for (; idx < s_to_v.size() && idx < s_to_endpoint2.size(); idx++)
+		{
+			if (s_to_v[idx] != s_to_endpoint2[idx])
+				break;
+		}
+		pi_s_l.insert(pi_s_l.end(), s_to_v.begin(), s_to_v.begin() + idx);
+		temp1 = vector<int>(s_to_v.begin() + idx - 1, s_to_v.end());
+		temp2 = vector<int>(s_to_endpoint2.begin() + idx - 1, s_to_endpoint2.end());
+		get_remaining_path(temp1, temp2, &pi_s_l, &foot_s);
 		
 	}
 	return;

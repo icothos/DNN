@@ -169,8 +169,7 @@ int SPT::choose_v(Funnel* funnel)
 	int* triangles = diagonal_list[diag].get_triangle();
 	int selected_tri_index = -1;
 	int v = -1;
-	if (triangles[0] == 1 || triangles[1] == 1)
-		printf("gotcha\n");
+
 	for (int i = 0; i < 2; i++)
 	{
 		int v_cand;

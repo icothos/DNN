@@ -104,9 +104,9 @@ public:
 	{
 		foot_is_P_vertex = is_polygon_vertex;
 	}
-	void compute_shortest_path_to_los(vector<int> shortest_path, SPT* spt);
+	void compute_shortest_path_to_los(vector<int> shortest_path, SPT* spt_s, SPT* spt_t);
 	bool compute_other_endpoint();
-	vector<Point> get_shortest_path_to_line(bool s_to_l);
+	vector<Point> get_shortest_path_to_line(bool s);
 	Point* get_endpoint(int from, int to, int tri, int vertex1, int vertex2);
 	vector<int> compute_shortest_path_line_nonP_vertex(Point vertex, SPT* spt, int e1, int e2);
 };
@@ -141,16 +141,17 @@ Point foot_of_perpendicular(int p, Edge e)
 	}
 }*/
 
-vector<Point> LOS::get_shortest_path_to_line(bool s_to_l)
+vector<Point> LOS::get_shortest_path_to_line(bool s)
 {
 	vector<Point> sp;
-	vector<int>* sp_line = s_to_l ? &pi_s_l : &pi_t_l;
+	vector<int>* sp_line = s?&pi_s_l:&pi_t_l;
 	for (int i = 0; i < sp_line->size(); i++)
 	{
 		sp.push_back(point_list[sp_line->at(i)]);
 	}
 
-	sp.push_back(s_to_l?foot_s:foot_t);
+	if(type!=PATH)
+	sp.push_back(s?foot_s:foot_t);
 
 	return sp;
 }
@@ -244,7 +245,7 @@ void get_remaining_path(vector<int> chain1, vector<int> chain2, vector<int>* fin
 	}
 
 	//no foot of perpendicular
-	final_path->pop_back();
+	//final_path->pop_back();
 	*Foot = point_list[main_chain.back()];
 	return;
 }
@@ -310,7 +311,7 @@ vector<int> LOS::compute_shortest_path_line_nonP_vertex(Point vertex, SPT* spt, 
 	printf("this should be an error\n");
 	exit(40);
 }
-void LOS::compute_shortest_path_to_los(vector<int> shortest_path, SPT* spt)
+void LOS::compute_shortest_path_to_los(vector<int> shortest_path, SPT* spt_s, SPT* spt_t)
 {
 	if (type == PATH)
 	{
@@ -321,38 +322,59 @@ void LOS::compute_shortest_path_to_los(vector<int> shortest_path, SPT* spt)
 		reverse(pi_t_l.begin(), pi_t_l.end());
 		foot_is_P_vertex = true;
 	}
-	else if (type == BOUNDARY_S)
+	else
 	{
-		//shortest path from s to the rotation vertex
-		vector<int> s_to_v = spt->retrieve_shortest_path(rotation_vertex);
-		vector<int> s_to_other_endpoint = compute_shortest_path_line_nonP_vertex(other_endpoint, spt, e1,e2);
-		
+		SPT* spt_other, * spt_endpoint2;
+		Point* foot_other, * foot_endpoint2;
+		vector<int>* other, * endpoint2;
+		if (type == BOUNDARY_S)
+		{
+			spt_other = spt_s;
+			spt_endpoint2 = spt_t;
+			other = &pi_s_l;
+			endpoint2 = &pi_t_l;
+			foot_other = &foot_s;
+			foot_endpoint2 = &foot_t;
+		}
+		else
+		{
+			spt_other = spt_t;
+			spt_endpoint2 = spt_s;
+			other = &pi_t_l;
+			endpoint2 = &pi_s_l;
+			foot_other = &foot_t;
+			foot_endpoint2 = &foot_s;
+		}
+		vector<int> to_v = spt_other->retrieve_shortest_path(rotation_vertex);
+		point_list.push_back(other_endpoint);
+		vector<int> to_other_endpoint = compute_shortest_path_line_nonP_vertex(other_endpoint, spt_other, e1, e2);
+		to_other_endpoint.push_back(point_list.size() - 1);
 		int idx = 0;
-		for (; idx < s_to_v.size() && idx < s_to_other_endpoint.size(); idx++)
+		for (; idx < to_v.size() && idx < to_other_endpoint.size(); idx++)
 		{
-			if (s_to_v[idx] != s_to_other_endpoint[idx])
+			if (to_v[idx] != to_other_endpoint[idx])
 				break;
 		}
-		pi_t_l.insert(pi_t_l.end(), s_to_v.begin(), s_to_v.begin() + idx);
-		vector<int> temp1(s_to_v.begin() + idx - 1, s_to_v.end());
-		vector<int> temp2(s_to_other_endpoint.begin() + idx - 1, s_to_other_endpoint.end());
-		get_remaining_path(temp1, temp2, &pi_t_l, &foot_t);
-		//now let's compute the shortest path to (v,other_endpoint)
+		other->insert(other->end(), to_v.begin(), to_v.begin() + idx);
+		vector<int> temp1(to_v.begin() + idx - 1, to_v.end());
+		vector<int> temp2(to_other_endpoint.begin() + idx - 1, to_other_endpoint.end());
+		get_remaining_path(temp1, temp2, other, foot_other);
+		point_list.pop_back();
 
-		//shortest path for (v, endpoint2)
-		vector<int> s_to_endpoint2 = spt->retrieve_shortest_path(endpoint2);
+		to_v = spt_endpoint2->retrieve_shortest_path(rotation_vertex);
+		vector<int> to_endpoint2 = spt_endpoint2->retrieve_shortest_path(this->endpoint2);
 		idx = 0;
-		for (; idx < s_to_v.size() && idx < s_to_endpoint2.size(); idx++)
+		for (; idx < to_v.size() && idx < to_endpoint2.size(); idx++)
 		{
-			if (s_to_v[idx] != s_to_endpoint2[idx])
+			if (to_v[idx] != to_endpoint2[idx])
 				break;
 		}
-		pi_s_l.insert(pi_s_l.end(), s_to_v.begin(), s_to_v.begin() + idx);
-		temp1 = vector<int>(s_to_v.begin() + idx - 1, s_to_v.end());
-		temp2 = vector<int>(s_to_endpoint2.begin() + idx - 1, s_to_endpoint2.end());
-		get_remaining_path(temp1, temp2, &pi_s_l, &foot_s);
-		
+		endpoint2->insert(endpoint2->end(), to_v.begin(), to_v.begin() + idx);
+		temp1 = vector<int>(to_v.begin() + idx - 1, to_v.end());
+		temp2 = vector<int>(to_endpoint2.begin() + idx - 1, to_endpoint2.end());
+		get_remaining_path(temp1, temp2, endpoint2, foot_endpoint2);
 	}
+
 	return;
 }
 

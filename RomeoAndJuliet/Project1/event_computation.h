@@ -233,12 +233,9 @@ void EVENTS::compute_bend_events()
 	{
 		for (int j = 0; j < queue[i].size(); j++)
 		{
-			LOS* los = queue[i][j];
-			
-			los->compute_shortest_path_to_los(shortest_path, spt_s);
-
-
-			//the same for s_to_e2
+			queue[i][j]->compute_shortest_path_to_los(shortest_path, spt_s,spt_t);
 		}
 	}
+
+	printf("done computing all the shortest paths\n");
 }

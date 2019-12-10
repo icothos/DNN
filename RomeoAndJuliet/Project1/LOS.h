@@ -47,11 +47,13 @@ class LOS {
 	float path_event_angle; //the angle between the previous path event (used to sort the boundary events)
 	int rotation_vertex;
 
-	vector<int> pi_s_l;//shortest path from s to l (only the polygon vertices registered in point_list)
-	vector<int> pi_t_l;//shortest path from t to l (only the polygon vertices registered in point_list)
+	vector<int> sp_line[2];//[0] : pi_s_l, [1] : pi_t_l
+	//vector<int> pi_s_l;//shortest path from s to l (only the polygon vertices registered in point_list)
+	//vector<int> pi_t_l;//shortest path from t to l (only the polygon vertices registered in point_list)
 	Point foot[2]; //foot[0] indicates the foot of perpendicular in pi_s_l and foot[1] :  pi_t_l
 	bool foot_is_P_vertex;
-	int edge[2]; //vertices of the edge that 'endpoint1 (endpoint2)' passes through
+	int edge1[2]; //vertices of the edge that 'endpoint1 (endpoint2)' passes through
+	int edge2[2];
 public:
 	LOS(int _id, int _p1, int _p2, int rot_vertex, float angle, event_type _type)
 	{
@@ -68,8 +70,8 @@ public:
 	int get_p2(){return p[1];}
 	Point get_endpoint(bool idx){return endpoint[idx];}
 	event_type get_type(){return type;}
-	vector<int> get_pi_s_l(){return pi_s_l;}
-	vector<int> get_pi_t_l(){return pi_t_l;}
+	vector<int> get_pi_s_l(){return sp_line[0];}
+	vector<int> get_pi_t_l(){return sp_line[1];}
 
 	int get_rotation_vertex()
 	{
@@ -82,11 +84,11 @@ public:
 	
 	void set_pi_s_l(vector<int> pi)
 	{
-		pi_s_l = pi;
+		sp_line[0] = pi;
 	}
 	void set_pi_t_l(vector<int> pi)
 	{
-		pi_t_l = pi;
+		sp_line[1] = pi;
 	}
 	void set_foot_bool(bool is_polygon_vertex)
 	{
@@ -96,7 +98,7 @@ public:
 	void compute_shortest_path_to_los(vector<int> shortest_path, SPT** spt);
 	bool compute_other_endpoint(bool is_type);
 	vector<Point> get_shortest_path_to_line(bool s);
-	Point* get_endpoint(int from, int to, int tri, int vertex1, int vertex2);
+	Point* get_endpoint(int from, int to, int tri, int vertex1, int vertex2, bool first);
 	vector<int> compute_shortest_path_line_nonP_vertex(Point vertex, SPT* spt, int* e);
 	void extend_path_event();
 };
@@ -135,14 +137,14 @@ Point foot_of_perpendicular(int p, Edge e)
 vector<Point> LOS::get_shortest_path_to_line(bool s)
 {
 	vector<Point> sp;
-	vector<int>* sp_line = s?&pi_s_l:&pi_t_l;
-	for (int i = 0; i < sp_line->size(); i++)
+	vector<int>* line = s ? &sp_line[0] : &sp_line[1];
+	for (int i = 0; i < line->size(); i++)
 	{
-		sp.push_back(point_list[sp_line->at(i)]);
+		sp.push_back(point_list[line->at(i)]);
 	}
 
-	if(type!=PATH)
 	sp.push_back(s?foot[0]:foot[1]);
+	
 
 	return sp;
 }
@@ -305,31 +307,37 @@ void LOS::compute_shortest_path_to_los(vector<int> shortest_path, SPT** spt)
 {
 	if (type == PATH)
 	{
-		vector<int>::iterator it = find(shortest_path.begin(), shortest_path.end(), p[1]);
+		//pi_s_l should be the shortest path to line p[0] and endpoint[0]
+		//pi_t_l should be the shortest path to line p[1] and endpoint[1]
+		for (int i = 0; i < 2; i++)
+		{
+			vector<int> to_p = spt[i]->retrieve_shortest_path(p[i]);
+			point_list.push_back(endpoint[i]);
+			vector<int> to_endp = compute_shortest_path_line_nonP_vertex(endpoint[i], spt[i], i==0?edge1:edge2);
+			to_endp.push_back(point_list.size() - 1);
+	
+			int idx = 0;
+			for (;idx<to_p.size() && idx<to_endp.size();idx++)
+			{
+				if (to_p[idx] != to_endp[idx])
+					break;
+			}
 
-		pi_s_l.insert(pi_s_l.end(), shortest_path.begin(), it);
-		pi_t_l.insert(pi_t_l.end(), it, shortest_path.end());
-		reverse(pi_t_l.begin(), pi_t_l.end());
-		foot_is_P_vertex = true;
+			sp_line[i].insert(sp_line[i].end(), to_p.begin(), to_p.begin() + idx);
+			vector<int> temp1(to_p.begin() + idx - 1, to_p.end());
+			vector<int> temp2(to_endp.begin() + idx - 1, to_endp.end());
+			get_remaining_path(temp1, temp2, &sp_line[i], &foot[i]);
+			point_list.pop_back();
+		}
 	}
 	else
 	{
-		vector<int>* other, * endpoint_;
+		//vector<int>* other, * endpoint_;
 		bool is_s = (type == BOUNDARY_S);
-		if (is_s)
-		{
-			other = &pi_s_l;
-			endpoint_ = &pi_t_l;
-		}
-		else
-		{
-			other = &pi_t_l;
-			endpoint_ = &pi_s_l;
-		}
 		
 		vector<int> to_v = spt[!is_s]->retrieve_shortest_path(rotation_vertex);
 		point_list.push_back(endpoint[0]);
-		vector<int> to_other_endpoint = compute_shortest_path_line_nonP_vertex(endpoint[0], spt[!is_s], edge);
+		vector<int> to_other_endpoint = compute_shortest_path_line_nonP_vertex(endpoint[0], spt[!is_s], edge1);
 		to_other_endpoint.push_back(point_list.size() - 1);
 		int idx = 0;
 		for (; idx < to_v.size() && idx < to_other_endpoint.size(); idx++)
@@ -337,10 +345,10 @@ void LOS::compute_shortest_path_to_los(vector<int> shortest_path, SPT** spt)
 			if (to_v[idx] != to_other_endpoint[idx])
 				break;
 		}
-		other->insert(other->end(), to_v.begin(), to_v.begin() + idx);
+		sp_line[!is_s].insert(sp_line[!is_s].end(), to_v.begin(), to_v.begin()+idx);
 		vector<int> temp1(to_v.begin() + idx - 1, to_v.end());
 		vector<int> temp2(to_other_endpoint.begin() + idx - 1, to_other_endpoint.end());
-		get_remaining_path(temp1, temp2, other, &foot[!is_s]);
+		get_remaining_path(temp1, temp2, &sp_line[!is_s],&foot[!is_s]);
 		point_list.pop_back();
 
 		to_v = spt[is_s]->retrieve_shortest_path(rotation_vertex);
@@ -351,10 +359,10 @@ void LOS::compute_shortest_path_to_los(vector<int> shortest_path, SPT** spt)
 			if (to_v[idx] != to_endpoint2[idx])
 				break;
 		}
-		endpoint_->insert(endpoint_->end(), to_v.begin(), to_v.begin() + idx);
+		sp_line[is_s].insert(sp_line[is_s].end(), to_v.begin(), to_v.begin() + idx);
 		temp1 = vector<int>(to_v.begin() + idx - 1, to_v.end());
 		temp2 = vector<int>(to_endpoint2.begin() + idx - 1, to_endpoint2.end());
-		get_remaining_path(temp1, temp2, endpoint_, &foot[is_s]);
+		get_remaining_path(temp1, temp2, &sp_line[is_s], &foot[is_s]);
 	}
 
 	return;
@@ -455,7 +463,33 @@ int choose_triangle(int rotation, int endpoint, int* vertex)
 	vertex[0] = -1;
 	vertex[1] = -1;
 	//find the triangle that (endpoint,rotation) penentrates through!!
+/**/
 
+	if (rotation == v_num+3||rotation==v_num+4)
+	{
+		triangle = candidates.front();
+
+		vector<int> v = polygon_list[triangle];
+
+		for (int i = 0; i < 3; i++)
+		{
+			if (check_penetration(endpoint, rotation, rotation, v[i], v[(i + 1) % 3]))
+			{
+				vertex[0] = v[i];
+				vertex[1] = v[(i + 1) % 3];
+				break;
+			}
+		}
+
+		if (vertex[0] == -1)
+		{
+			printf(" vertex should have been set by now\n");
+			exit(67);
+		}
+
+		return triangle;
+	}
+	/*
 	if (rotation >= v_num)
 	{
 		triangle = candidates.front();
@@ -469,7 +503,7 @@ int choose_triangle(int rotation, int endpoint, int* vertex)
 			}
 		}
 		return triangle;
-	}
+	}*/
 
 	for (int i = 0; i < candidates.size(); i++)
 	{
@@ -523,7 +557,7 @@ Point* get_line_intersection(int p1, int p2, int q1, int q2)
 	return &newP;
 }
 
-Point * LOS::get_endpoint(int from, int to, int tri, int vertex1, int vertex2)
+Point * LOS::get_endpoint(int from, int to, int tri, int vertex1, int vertex2,bool first)
 {
 	Triangle triangle = t_list[tri];
 	int* diag_list = triangle.get_d_list();
@@ -552,6 +586,7 @@ Point * LOS::get_endpoint(int from, int to, int tri, int vertex1, int vertex2)
 	//check if polygon edge
 	int diff = abs(chosen_vertex - other_vertex);
 	if (diff == 1 || diff == (v_num - 1)) {
+		int* edge = (type != PATH) ? edge1 : (first ? edge1 : edge2);//)first ? edge1 : edge2;
 		edge[0] = chosen_vertex;
 		edge[1] = other_vertex;
 		return get_line_intersection(from, to, chosen_vertex, other_vertex);
@@ -573,7 +608,7 @@ Point * LOS::get_endpoint(int from, int to, int tri, int vertex1, int vertex2)
 		else
 			new_tri = diagonal_list[diag].get_triangle()[0];
 
-		return get_endpoint(from, to, new_tri, chosen_vertex, other_vertex);
+		return get_endpoint(from, to, new_tri, chosen_vertex, other_vertex,first);
 	}
 }
 
@@ -581,7 +616,7 @@ Point * LOS::get_endpoint(int from, int to, int tri, int vertex1, int vertex2)
 bool LOS::compute_other_endpoint(bool is_type)
 {
 	int vertex[2] = { -1, -1 };
-
+	//int* edge = first ? edge1 : edge2;
 	bool idx = 1;
 
 	do {
@@ -595,6 +630,7 @@ bool LOS::compute_other_endpoint(bool is_type)
 		if (diff == 1 || diff == (v_num - 1))
 		{
 			endpoint[idx] = *get_line_intersection(p[idx], p[!idx], vertex[0], vertex[1]);
+			int* edge = idx == 0 ? edge1 : edge2;// is_type ? (idx == 0 ? edge1 : edge2) : (edge1);// idx == 0 ? edge2 : edge1;
 			edge[0] = vertex[0];
 			edge[1] = vertex[1];
 		}
@@ -619,7 +655,8 @@ bool LOS::compute_other_endpoint(bool is_type)
 			else
 				new_tri = diagonal_list[diag].get_triangle()[0];
 
-			Point * ptr = get_endpoint(p[!idx], p[idx], new_tri, vertex[0], vertex[1]);
+			//boundary types only get idx==false (TYPEs get false-true in order)
+			Point * ptr = get_endpoint(p[!idx], p[idx], new_tri, vertex[0], vertex[1],!idx);
 			if (ptr == NULL)
 				return false;
 			this->endpoint[idx] = *ptr;
@@ -627,57 +664,4 @@ bool LOS::compute_other_endpoint(bool is_type)
 	} while (is_type && idx==false);
 
 	return true;
-
-
-
-
-	/*
-
-	int rotation = p[0];
-	int endpoint = p[1];
-	int vertex[2] = { -1,-1 };
-
-	//compute triangle that the boundary event penetrates through
-	int triangle = choose_triangle(rotation, endpoint, vertex);
-	if (triangle == -1)
-		return false;
-
-	//polygon vertex
-	int diff = abs(vertex[0] - vertex[1]);
-	if (diff == 1 || diff == (v_num - 1))
-	{
-		this->endpoint[0] = *get_line_intersection(rotation, endpoint, vertex[0], vertex[1]);
-		edge[0] = vertex[0];
-		edge[1] = vertex[1];
-		return true;
-	}
-	else
-	{
-		int new_tri = -1;
-		int* d_list = t_list[triangle].get_d_list();
-		int diag = -1;
-		for (int i = 0; i < 3; i++)
-		{
-			if (d_list[i] != -1 && diagonal_list[d_list[i]].check_same_point(vertex[0]) != -1 && diagonal_list[d_list[i]].check_same_point(vertex[1]) != -1)
-			{
-				diag = d_list[i];
-				break;
-			}
-		}
-		if (diag == -1)
-			return false;
-
-		if (diagonal_list[diag].get_triangle()[0] == triangle)
-			new_tri = diagonal_list[diag].get_triangle()[1];
-		else
-			new_tri = diagonal_list[diag].get_triangle()[0];
-
-
-		Point * ptr = get_endpoint(endpoint, rotation, new_tri, vertex[0], vertex[1]);
-		if (ptr == NULL)
-			return false;
-		this->endpoint[0] = *ptr;
-	}*/
-
-	//return true;
 }

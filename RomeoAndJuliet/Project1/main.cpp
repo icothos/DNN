@@ -913,7 +913,7 @@ void display() {
 	/* Drawing the Polygon Boundary */
 	glLineWidth(4);
 	glPointSize(5.0f);
-	set_color_rgb(52, 152, 219);
+	set_color_rgb(227, 172, 28);
 	glBegin(GL_LINE_LOOP);
 	for (int i = 0; i < v_num; i++)
 		glVertex2d(point_list[i].get_x(), point_list[i].get_y());
@@ -935,7 +935,7 @@ void display() {
 	
 	/* Mark the boundary events (path events overlap with the shortest path) */
 	glLineWidth(3);
-	set_color_rgb(152, 219, 52); //green
+	set_color_rgb(207, 99, 10); //green
 	vector<vector<LOS*>> Queue = Events.get_queue();
 	glBegin(GL_LINES);
 	for (int i = 0; i < Queue.size(); i++)
@@ -949,7 +949,7 @@ void display() {
 	glEnd();
 
 	/* Mark the extensions of the boundary events */
-	set_color_rgb(242, 200, 228); //green
+	//set_color_rgb(242, 200, 228); //green
 	glBegin(GL_LINES);
 	for (int i = 0; i < Queue.size(); i++)
 	{
@@ -961,10 +961,19 @@ void display() {
 	}
 	glEnd();
 	
-	
+	/* Mark the extensions of the path events */
+	set_color_rgb(255, 192, 203); //green
+	glBegin(GL_LINES);
+	for (int i = 0; i < Queue.size(); i++)
+	{
+		glVertex2d(Queue[i][0]->get_endpoint(true).get_x(), Queue[i][0]->get_endpoint(true).get_y());
+		glVertex2d((Queue[i][0]->get_endpoint(false)).get_x(), (Queue[i][0]->get_endpoint(false)).get_y());
+		
+	}
+	glEnd();
 
 	/* Draws the shortest path computed using the shortest path tree */
-	set_color_rgb(219, 52, 152);
+	set_color_rgb(43, 117, 90);
 	glLineWidth(4);
 	glBegin(GL_LINES);
 	for (int i = 0; i < (int)shortest_path.size()-1; i++)
@@ -975,7 +984,7 @@ void display() {
 	glEnd();
 
 	/* Testing out the shortest path to line algorithm */
-	set_color_rgb(49, 22, 100);
+	set_color_rgb(46, 92, 128);
 	glLineWidth(4);
 	glBegin(GL_LINES);
 	for (int i = 0; i < (int)shortest_path_to_line.size() - 1; i++)

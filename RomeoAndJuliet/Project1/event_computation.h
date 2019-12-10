@@ -266,5 +266,6 @@ void EVENTS::compute_bend_events()
 	//there is a change in the combinatorial structure of the path
 
 
-	printf("done computing bend events\n");*/
+	printf("done computing bend events\n");
+	*/
 }

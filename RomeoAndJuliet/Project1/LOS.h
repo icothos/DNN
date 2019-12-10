@@ -50,6 +50,8 @@ class LOS {
 	bool foot_is_P_vertex;
 	int e1; //vertex of the edge that the `other_endpoint' passes through
 	int e2;
+	Point extend1;
+	Point extend2;
 public:
 	LOS(int _id, int p1, int p2, int rot_vertex, float angle, event_type _type)
 	{
@@ -92,6 +94,14 @@ public:
 	{
 		return type;
 	}
+	vector<int> get_pi_s_l()
+	{
+		return pi_s_l;
+	}
+	vector<int> get_pi_t_l()
+	{
+		return pi_t_l;
+	}
 	void set_pi_s_l(vector<int> pi)
 	{
 		pi_s_l = pi;
@@ -109,6 +119,7 @@ public:
 	vector<Point> get_shortest_path_to_line(bool s);
 	Point* get_endpoint(int from, int to, int tri, int vertex1, int vertex2);
 	vector<int> compute_shortest_path_line_nonP_vertex(Point vertex, SPT* spt, int e1, int e2);
+	void extend_path_event();
 };
 /*
 Point foot_of_perpendicular(int p, Edge e)
@@ -140,6 +151,7 @@ Point foot_of_perpendicular(int p, Edge e)
 		return Point(qx, qy);
 	}
 }*/
+
 
 vector<Point> LOS::get_shortest_path_to_line(bool s)
 {
@@ -311,6 +323,7 @@ vector<int> LOS::compute_shortest_path_line_nonP_vertex(Point vertex, SPT* spt, 
 	printf("this should be an error\n");
 	exit(40);
 }
+
 void LOS::compute_shortest_path_to_los(vector<int> shortest_path, SPT* spt_s, SPT* spt_t)
 {
 	if (type == PATH)
@@ -470,7 +483,25 @@ int choose_triangle(int rotation, int endpoint, int* vertex)
 	vector<int> candidates = point_state.find_all_triangles(point_list[rotation]);
 	int triangle;
 
+	vertex[0] = -1;
+	vertex[1] = -1;
 	//find the triangle that (endpoint,rotation) penentrates through!!
+
+	if (rotation >= v_num)
+	{
+		triangle = candidates.front();
+		for (int i = 0; i < 3; i++)
+		{
+			if (polygon_list[triangle][i] == endpoint)
+			{
+				vertex[0] = polygon_list[triangle][(i + 1) % 3];
+				vertex[1] = polygon_list[triangle][(i + 2) % 3];
+				break;
+			}
+		}
+		return triangle;
+	}
+
 	for (int i = 0; i < candidates.size(); i++)
 	{
 		triangle = candidates[i];

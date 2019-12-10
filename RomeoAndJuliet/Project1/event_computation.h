@@ -83,7 +83,8 @@ void EVENTS::compute_path_events()
 		
 		//float angle = i == 0 ? 0 : calculate_angle_between_positive(shortest_path[i], shortest_path[i + 1], shortest_path[i], shortest_path[i - 1]);
 		LOS* los = new LOS(next_line_id++, prev, cur, cur, 0, PATH);
-
+		los->compute_other_endpoint();
+		//los->extend_path_event();
 		queue[i].push_back(los);
 	}
 }
@@ -226,7 +227,14 @@ void EVENTS::compute_shortest_path_to_line(int i, int j)
 	
 }*/
 
-
+void print_vector(vector<int> vec)
+{
+	for (int i = 0; i < vec.size(); i++)
+	{
+		printf("%d ", vec[i]);
+	}
+	printf("\n");
+}
 void EVENTS::compute_bend_events()
 {
 	for (int i = 0; i < queue.size(); i++)
@@ -238,4 +246,25 @@ void EVENTS::compute_bend_events()
 	}
 
 	printf("done computing all the shortest paths\n");
+
+	vector<int> prev = queue[0][0]->get_pi_s_l();// int prev_size = queue[0][0]->get_pi_s_l();
+	for (int i = 0; i < queue.size(); i++)
+	{
+		for (int j = 0; j < queue[i].size(); j++)
+		{
+			vector<int> cur = queue[i][j]->get_pi_s_l();
+			if (prev.size() != cur.size())
+			{
+				printf("i: %d j: %d\n",i,j);
+				print_vector(prev);
+				print_vector(cur);
+			}
+			prev = cur;
+		}
+	}
+	//for every consecutive event... we have to see whether 
+	//there is a change in the combinatorial structure of the path
+
+
+	printf("done computing bend events\n");
 }

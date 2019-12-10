@@ -172,8 +172,7 @@ public:
 
 		if (ret_candidates.size() > 1)
 			printf("what kinda case is this??");
-		return *min_element(ret_candidates.begin(), ret_candidates.end());;
-		//return triangle_list[ret];
+		return *min_element(ret_candidates.begin(), ret_candidates.end());
 	}
 	void find_independent_list() {
 		vector<bool> dependent_vertex(visited);

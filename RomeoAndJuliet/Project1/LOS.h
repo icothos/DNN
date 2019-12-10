@@ -71,9 +71,6 @@ public:
 	vector<int> get_pi_s_l(){return pi_s_l;}
 	vector<int> get_pi_t_l(){return pi_t_l;}
 
-
-
-
 	int get_rotation_vertex()
 	{
 		return rotation_vertex;
@@ -97,7 +94,7 @@ public:
 	}
 
 	void compute_shortest_path_to_los(vector<int> shortest_path, SPT** spt);
-	bool compute_other_endpoint();
+	bool compute_other_endpoint(bool is_type);
 	vector<Point> get_shortest_path_to_line(bool s);
 	Point* get_endpoint(int from, int to, int tri, int vertex1, int vertex2);
 	vector<int> compute_shortest_path_line_nonP_vertex(Point vertex, SPT* spt, int* e);
@@ -317,13 +314,7 @@ void LOS::compute_shortest_path_to_los(vector<int> shortest_path, SPT** spt)
 	}
 	else
 	{
-		//SPT* spt_other, * spt_endpoint;
-		//Point* foot_other, * foot_endpoint;
 		vector<int>* other, * endpoint_;
-		
-		//SPT* spt_other, * spt_endpoint;
-		//Point* foot_other, * foot_endpoint;
-		//vector<int>* other, * endpoint_;
 		bool is_s = (type == BOUNDARY_S);
 		if (is_s)
 		{
@@ -364,63 +355,6 @@ void LOS::compute_shortest_path_to_los(vector<int> shortest_path, SPT** spt)
 		temp1 = vector<int>(to_v.begin() + idx - 1, to_v.end());
 		temp2 = vector<int>(to_endpoint2.begin() + idx - 1, to_endpoint2.end());
 		get_remaining_path(temp1, temp2, endpoint_, &foot[is_s]);
-
-
-		
-
-
-
-
-
-
-		/*
-		
-		if (type == BOUNDARY_S)
-		{
-			spt_other = spt[0];
-			spt_endpoint = spt[1];
-			other = &pi_s_l;
-			endpoint_ = &pi_t_l;
-			foot_other = &foot[0];
-			foot_endpoint = &foot[1];
-		}
-		else
-		{
-			spt_other = spt[1];
-			spt_endpoint = spt[0];
-			other = &pi_t_l;
-			endpoint_ = &pi_s_l;
-			foot_other = &foot[1];
-			foot_endpoint = &foot[1];
-		}
-		vector<int> to_v = spt_other->retrieve_shortest_path(rotation_vertex);
-		point_list.push_back(endpoint[0]);
-		vector<int> to_other_endpoint = compute_shortest_path_line_nonP_vertex(endpoint[0], spt_other, edge);
-		to_other_endpoint.push_back(point_list.size() - 1);
-		int idx = 0;
-		for (; idx < to_v.size() && idx < to_other_endpoint.size(); idx++)
-		{
-			if (to_v[idx] != to_other_endpoint[idx])
-				break;
-		}
-		other->insert(other->end(), to_v.begin(), to_v.begin() + idx);
-		vector<int> temp1(to_v.begin() + idx - 1, to_v.end());
-		vector<int> temp2(to_other_endpoint.begin() + idx - 1, to_other_endpoint.end());
-		get_remaining_path(temp1, temp2, other, foot_other);
-		point_list.pop_back();
-
-		to_v = spt_endpoint->retrieve_shortest_path(rotation_vertex);
-		vector<int> to_endpoint2 = spt_endpoint->retrieve_shortest_path(p[1]);
-		idx = 0;
-		for (; idx < to_v.size() && idx < to_endpoint2.size(); idx++)
-		{
-			if (to_v[idx] != to_endpoint2[idx])
-				break;
-		}
-		endpoint_->insert(endpoint_->end(), to_v.begin(), to_v.begin() + idx);
-		temp1 = vector<int>(to_v.begin() + idx - 1, to_v.end());
-		temp2 = vector<int>(to_endpoint2.begin() + idx - 1, to_endpoint2.end());
-		get_remaining_path(temp1, temp2, endpoint_, foot_endpoint);*/
 	}
 
 	return;
@@ -644,8 +578,61 @@ Point * LOS::get_endpoint(int from, int to, int tri, int vertex1, int vertex2)
 }
 
 
-bool LOS::compute_other_endpoint()
+bool LOS::compute_other_endpoint(bool is_type)
 {
+	int vertex[2] = { -1, -1 };
+
+	bool idx = 1;
+
+	do {
+
+		idx = !idx;
+		int tri = choose_triangle(p[idx], p[!idx], vertex);
+		if (tri == -1)
+			return false;
+
+		int diff = abs(vertex[0] - vertex[1]);
+		if (diff == 1 || diff == (v_num - 1))
+		{
+			endpoint[idx] = *get_line_intersection(p[idx], p[!idx], vertex[0], vertex[1]);
+			edge[0] = vertex[0];
+			edge[1] = vertex[1];
+		}
+		else
+		{
+			int new_tri = -1;
+			int* d_list = t_list[tri].get_d_list();
+			int diag = -1;
+			for (int i = 0; i < 3; i++)
+			{
+				if (d_list[i] != -1 && diagonal_list[d_list[i]].check_same_point(vertex[0]) != -1 && diagonal_list[d_list[i]].check_same_point(vertex[1]) != -1)
+				{
+					diag = d_list[i];
+					break;
+				}
+			}
+			if (diag == -1)
+				return false;
+
+			if (diagonal_list[diag].get_triangle()[0] == tri)
+				new_tri = diagonal_list[diag].get_triangle()[1];
+			else
+				new_tri = diagonal_list[diag].get_triangle()[0];
+
+			Point * ptr = get_endpoint(p[!idx], p[idx], new_tri, vertex[0], vertex[1]);
+			if (ptr == NULL)
+				return false;
+			this->endpoint[idx] = *ptr;
+		}
+	} while (is_type && idx==false);
+
+	return true;
+
+
+
+
+	/*
+
 	int rotation = p[0];
 	int endpoint = p[1];
 	int vertex[2] = { -1,-1 };
@@ -690,6 +677,7 @@ bool LOS::compute_other_endpoint()
 		if (ptr == NULL)
 			return false;
 		this->endpoint[0] = *ptr;
-		return true;
-	}
+	}*/
+
+	//return true;
 }

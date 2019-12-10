@@ -942,8 +942,8 @@ void display() {
 	{
 		for (int j = 1; j < Queue[i].size(); j++)
 		{
-			glVertex2d(point_list[Queue[i][j]->get_endpoint1()].get_x(), point_list[Queue[i][j]->get_endpoint1()].get_y());
-			glVertex2d(point_list[Queue[i][j]->get_endpoint2()].get_x(), point_list[Queue[i][j]->get_endpoint2()].get_y());
+			glVertex2d(point_list[Queue[i][j]->get_p1()].get_x(), point_list[Queue[i][j]->get_p1()].get_y());
+			glVertex2d(point_list[Queue[i][j]->get_p2()].get_x(), point_list[Queue[i][j]->get_p2()].get_y());
 		}
 	}
 	glEnd();
@@ -955,8 +955,8 @@ void display() {
 	{
 		for (int j = 1; j < Queue[i].size(); j++)
 		{
-			glVertex2d(point_list[Queue[i][j]->get_endpoint1()].get_x(), point_list[Queue[i][j]->get_endpoint1()].get_y());
-			glVertex2d((Queue[i][j]->get_other_endpoint()).get_x(), (Queue[i][j]->get_other_endpoint()).get_y());
+			glVertex2d(point_list[Queue[i][j]->get_p1()].get_x(), point_list[Queue[i][j]->get_p1()].get_y());
+			glVertex2d((Queue[i][j]->get_endpoint(false)).get_x(), (Queue[i][j]->get_endpoint(false)).get_y());
 		}
 	}
 	glEnd();

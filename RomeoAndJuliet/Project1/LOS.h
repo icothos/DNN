@@ -37,51 +37,43 @@ enum event_type {
 class LOS {
 	int id;
 	event_type type;
-	int endpoint1;//in case of boundary events, rotation vertices are stored as endpoint1
-	int endpoint2;//in case of boundary events, polygon vertices that are not rotation vertices are stored as endpoint2
-	Point other_endpoint;//the point of intersection between the l.o.s. and the polygon in stored here
+	int p[2]; /* PATH: the two vertices of the shortest path pi(s,t)
+	BOUNDARY: p[0] will be the rotation vertex and p[1] will be the other polygon vertex */
+	
+	Point endpoint[2]; /* the points where the extended lines meet with the polygon boundary
+					   PATH: [0] and [1] will both be used since path events can be extended bothways
+					   BOUDNARY: only [0] will be used to extend the line p[1]->p[0]*/
 	//float slope;
 	float path_event_angle; //the angle between the previous path event (used to sort the boundary events)
 	int rotation_vertex;
+
 	vector<int> pi_s_l;//shortest path from s to l (only the polygon vertices registered in point_list)
 	vector<int> pi_t_l;//shortest path from t to l (only the polygon vertices registered in point_list)
-	Point foot_s;
-	Point foot_t;
+	Point foot[2]; //foot[0] indicates the foot of perpendicular in pi_s_l and foot[1] :  pi_t_l
 	bool foot_is_P_vertex;
-	int e1; //vertex of the edge that the `other_endpoint' passes through
-	int e2;
-	Point extend1;
-	Point extend2;
+	int edge[2]; //vertices of the edge that 'endpoint1 (endpoint2)' passes through
 public:
-	LOS(int _id, int p1, int p2, int rot_vertex, float angle, event_type _type)
+	LOS(int _id, int _p1, int _p2, int rot_vertex, float angle, event_type _type)
 	{
 		id = _id;
-		endpoint1 = p1;
-		endpoint2 = p2;
+		p[0] = _p1;
+		p[1] = _p2;
 		type = _type;
 		rotation_vertex = rot_vertex;
 		//slope calculation
 		//slope = compute_slope(p1, p2);
 		path_event_angle = angle;
 	}
-	int get_endpoint1()
-	{
-		return endpoint1;
-	}
-	int get_endpoint2()
-	{
-		return endpoint2;
-	}
-	Point get_other_endpoint()
-	{
-		return other_endpoint;
-	}
-	
-	/*
-	float get_slope()
-	{
-		return slope;
-	}*/
+	int get_p1() {return p[0];}
+	int get_p2(){return p[1];}
+	Point get_endpoint(bool idx){return endpoint[idx];}
+	event_type get_type(){return type;}
+	vector<int> get_pi_s_l(){return pi_s_l;}
+	vector<int> get_pi_t_l(){return pi_t_l;}
+
+
+
+
 	int get_rotation_vertex()
 	{
 		return rotation_vertex;
@@ -90,18 +82,7 @@ public:
 	{
 		return path_event_angle;
 	}
-	event_type get_type()
-	{
-		return type;
-	}
-	vector<int> get_pi_s_l()
-	{
-		return pi_s_l;
-	}
-	vector<int> get_pi_t_l()
-	{
-		return pi_t_l;
-	}
+	
 	void set_pi_s_l(vector<int> pi)
 	{
 		pi_s_l = pi;
@@ -114,11 +95,12 @@ public:
 	{
 		foot_is_P_vertex = is_polygon_vertex;
 	}
-	void compute_shortest_path_to_los(vector<int> shortest_path, SPT* spt_s, SPT* spt_t);
+
+	void compute_shortest_path_to_los(vector<int> shortest_path, SPT** spt);
 	bool compute_other_endpoint();
 	vector<Point> get_shortest_path_to_line(bool s);
 	Point* get_endpoint(int from, int to, int tri, int vertex1, int vertex2);
-	vector<int> compute_shortest_path_line_nonP_vertex(Point vertex, SPT* spt, int e1, int e2);
+	vector<int> compute_shortest_path_line_nonP_vertex(Point vertex, SPT* spt, int* e);
 	void extend_path_event();
 };
 /*
@@ -163,7 +145,7 @@ vector<Point> LOS::get_shortest_path_to_line(bool s)
 	}
 
 	if(type!=PATH)
-	sp.push_back(s?foot_s:foot_t);
+	sp.push_back(s?foot[0]:foot[1]);
 
 	return sp;
 }
@@ -212,8 +194,6 @@ bool check_penetration(int from, int to, int apex, int first, int second)
 
 void get_remaining_path(vector<int> chain1, vector<int> chain2, vector<int>* final_path, Point* Foot)
 {
-
-
 	int apex = chain1[0];
 	Point foot = foot_of_perpendicular(apex, point_list[chain1.back()], point_list[chain2.back()]);
 
@@ -263,11 +243,11 @@ void get_remaining_path(vector<int> chain1, vector<int> chain2, vector<int>* fin
 }
 
 
-vector<int> LOS::compute_shortest_path_line_nonP_vertex(Point vertex, SPT* spt, int e1, int e2)
+vector<int> LOS::compute_shortest_path_line_nonP_vertex(Point vertex, SPT* spt, int* e)
 {
 	vector<int> shortest_path;
-	vector<int> _e1 = spt->retrieve_shortest_path(e1);
-	vector<int> _e2 = spt->retrieve_shortest_path(e2);
+	vector<int> _e1 = spt->retrieve_shortest_path(e[0]);
+	vector<int> _e2 = spt->retrieve_shortest_path(e[1]);
 
 	int size = _e1.size() <= _e2.size() ? _e1.size() : _e2.size();
 	int idx = 0;
@@ -324,11 +304,11 @@ vector<int> LOS::compute_shortest_path_line_nonP_vertex(Point vertex, SPT* spt, 
 	exit(40);
 }
 
-void LOS::compute_shortest_path_to_los(vector<int> shortest_path, SPT* spt_s, SPT* spt_t)
+void LOS::compute_shortest_path_to_los(vector<int> shortest_path, SPT** spt)
 {
 	if (type == PATH)
 	{
-		vector<int>::iterator it = find(shortest_path.begin(), shortest_path.end(), endpoint2);
+		vector<int>::iterator it = find(shortest_path.begin(), shortest_path.end(), p[1]);
 
 		pi_s_l.insert(pi_s_l.end(), shortest_path.begin(), it);
 		pi_t_l.insert(pi_t_l.end(), it, shortest_path.end());
@@ -337,30 +317,85 @@ void LOS::compute_shortest_path_to_los(vector<int> shortest_path, SPT* spt_s, SP
 	}
 	else
 	{
-		SPT* spt_other, * spt_endpoint2;
-		Point* foot_other, * foot_endpoint2;
-		vector<int>* other, * endpoint2;
-		if (type == BOUNDARY_S)
+		//SPT* spt_other, * spt_endpoint;
+		//Point* foot_other, * foot_endpoint;
+		vector<int>* other, * endpoint_;
+		
+		//SPT* spt_other, * spt_endpoint;
+		//Point* foot_other, * foot_endpoint;
+		//vector<int>* other, * endpoint_;
+		bool is_s = (type == BOUNDARY_S);
+		if (is_s)
 		{
-			spt_other = spt_s;
-			spt_endpoint2 = spt_t;
 			other = &pi_s_l;
-			endpoint2 = &pi_t_l;
-			foot_other = &foot_s;
-			foot_endpoint2 = &foot_t;
+			endpoint_ = &pi_t_l;
 		}
 		else
 		{
-			spt_other = spt_t;
-			spt_endpoint2 = spt_s;
 			other = &pi_t_l;
-			endpoint2 = &pi_s_l;
-			foot_other = &foot_t;
-			foot_endpoint2 = &foot_s;
+			endpoint_ = &pi_s_l;
+		}
+		
+		vector<int> to_v = spt[!is_s]->retrieve_shortest_path(rotation_vertex);
+		point_list.push_back(endpoint[0]);
+		vector<int> to_other_endpoint = compute_shortest_path_line_nonP_vertex(endpoint[0], spt[!is_s], edge);
+		to_other_endpoint.push_back(point_list.size() - 1);
+		int idx = 0;
+		for (; idx < to_v.size() && idx < to_other_endpoint.size(); idx++)
+		{
+			if (to_v[idx] != to_other_endpoint[idx])
+				break;
+		}
+		other->insert(other->end(), to_v.begin(), to_v.begin() + idx);
+		vector<int> temp1(to_v.begin() + idx - 1, to_v.end());
+		vector<int> temp2(to_other_endpoint.begin() + idx - 1, to_other_endpoint.end());
+		get_remaining_path(temp1, temp2, other, &foot[!is_s]);
+		point_list.pop_back();
+
+		to_v = spt[is_s]->retrieve_shortest_path(rotation_vertex);
+		vector<int> to_endpoint2 = spt[is_s]->retrieve_shortest_path(p[1]);
+		idx = 0;
+		for (; idx < to_v.size() && idx < to_endpoint2.size(); idx++)
+		{
+			if (to_v[idx] != to_endpoint2[idx])
+				break;
+		}
+		endpoint_->insert(endpoint_->end(), to_v.begin(), to_v.begin() + idx);
+		temp1 = vector<int>(to_v.begin() + idx - 1, to_v.end());
+		temp2 = vector<int>(to_endpoint2.begin() + idx - 1, to_endpoint2.end());
+		get_remaining_path(temp1, temp2, endpoint_, &foot[is_s]);
+
+
+		
+
+
+
+
+
+
+		/*
+		
+		if (type == BOUNDARY_S)
+		{
+			spt_other = spt[0];
+			spt_endpoint = spt[1];
+			other = &pi_s_l;
+			endpoint_ = &pi_t_l;
+			foot_other = &foot[0];
+			foot_endpoint = &foot[1];
+		}
+		else
+		{
+			spt_other = spt[1];
+			spt_endpoint = spt[0];
+			other = &pi_t_l;
+			endpoint_ = &pi_s_l;
+			foot_other = &foot[1];
+			foot_endpoint = &foot[1];
 		}
 		vector<int> to_v = spt_other->retrieve_shortest_path(rotation_vertex);
-		point_list.push_back(other_endpoint);
-		vector<int> to_other_endpoint = compute_shortest_path_line_nonP_vertex(other_endpoint, spt_other, e1, e2);
+		point_list.push_back(endpoint[0]);
+		vector<int> to_other_endpoint = compute_shortest_path_line_nonP_vertex(endpoint[0], spt_other, edge);
 		to_other_endpoint.push_back(point_list.size() - 1);
 		int idx = 0;
 		for (; idx < to_v.size() && idx < to_other_endpoint.size(); idx++)
@@ -374,18 +409,18 @@ void LOS::compute_shortest_path_to_los(vector<int> shortest_path, SPT* spt_s, SP
 		get_remaining_path(temp1, temp2, other, foot_other);
 		point_list.pop_back();
 
-		to_v = spt_endpoint2->retrieve_shortest_path(rotation_vertex);
-		vector<int> to_endpoint2 = spt_endpoint2->retrieve_shortest_path(this->endpoint2);
+		to_v = spt_endpoint->retrieve_shortest_path(rotation_vertex);
+		vector<int> to_endpoint2 = spt_endpoint->retrieve_shortest_path(p[1]);
 		idx = 0;
 		for (; idx < to_v.size() && idx < to_endpoint2.size(); idx++)
 		{
 			if (to_v[idx] != to_endpoint2[idx])
 				break;
 		}
-		endpoint2->insert(endpoint2->end(), to_v.begin(), to_v.begin() + idx);
+		endpoint_->insert(endpoint_->end(), to_v.begin(), to_v.begin() + idx);
 		temp1 = vector<int>(to_v.begin() + idx - 1, to_v.end());
 		temp2 = vector<int>(to_endpoint2.begin() + idx - 1, to_endpoint2.end());
-		get_remaining_path(temp1, temp2, endpoint2, foot_endpoint2);
+		get_remaining_path(temp1, temp2, endpoint_, foot_endpoint);*/
 	}
 
 	return;
@@ -583,8 +618,8 @@ Point * LOS::get_endpoint(int from, int to, int tri, int vertex1, int vertex2)
 	//check if polygon edge
 	int diff = abs(chosen_vertex - other_vertex);
 	if (diff == 1 || diff == (v_num - 1)) {
-		e1 = chosen_vertex;
-		e2 = other_vertex;
+		edge[0] = chosen_vertex;
+		edge[1] = other_vertex;
 		return get_line_intersection(from, to, chosen_vertex, other_vertex);
 	}
 	else
@@ -611,8 +646,8 @@ Point * LOS::get_endpoint(int from, int to, int tri, int vertex1, int vertex2)
 
 bool LOS::compute_other_endpoint()
 {
-	int rotation = endpoint1;
-	int endpoint = endpoint2;
+	int rotation = p[0];
+	int endpoint = p[1];
 	int vertex[2] = { -1,-1 };
 
 	//compute triangle that the boundary event penetrates through
@@ -624,9 +659,9 @@ bool LOS::compute_other_endpoint()
 	int diff = abs(vertex[0] - vertex[1]);
 	if (diff == 1 || diff == (v_num - 1))
 	{
-		other_endpoint = *get_line_intersection(rotation, endpoint, vertex[0], vertex[1]);
-		e1 = vertex[0];
-		e2 = vertex[1];
+		this->endpoint[0] = *get_line_intersection(rotation, endpoint, vertex[0], vertex[1]);
+		edge[0] = vertex[0];
+		edge[1] = vertex[1];
 		return true;
 	}
 	else
@@ -654,7 +689,7 @@ bool LOS::compute_other_endpoint()
 		Point * ptr = get_endpoint(endpoint, rotation, new_tri, vertex[0], vertex[1]);
 		if (ptr == NULL)
 			return false;
-		other_endpoint = *ptr;
+		this->endpoint[0] = *ptr;
 		return true;
 	}
 }

@@ -12,8 +12,7 @@ class EVENTS {
 	int next_line_id;
 	vector<vector<LOS*>> queue;
 	vector<int> shortest_path;
-	SPT* spt_s;
-	SPT* spt_t;
+	SPT* spt[2]; //[0]: spt_s (s as root) , [1]: spt_t (t as root)
 public:
 	EVENTS() {}
 	EVENTS(vector<int> _shortest_path, SPT* _spt_s, SPT* _spt_t)
@@ -24,8 +23,8 @@ public:
 		{
 			queue.push_back(vector<LOS*>());
 		}
-		spt_s = _spt_s;
-		spt_t = _spt_t;
+		spt[0] = _spt_s;
+		spt[1] = _spt_t;
 	}
 	vector<int> get_shortest_path()
 	{
@@ -125,7 +124,7 @@ void EVENTS::compute_boundary_events()
 		int next = shortest_path[i + 1];
 
 		//find the vertex in the spt and the direct children will be the candidate
-		SPTnode* vertex = spt_s->get_node(cur);
+		SPTnode* vertex = spt[0]->get_node(cur);
 		if (vertex == NULL)
 		{
 			printf("couldn't find node in tree\n");
@@ -134,7 +133,7 @@ void EVENTS::compute_boundary_events()
 		vector<SPTnode*> s_candidates = vertex->get_children();
 		int s_size = s_candidates.size();
 
-		SPTnode* vertex_t = spt_t->get_node(cur);
+		SPTnode* vertex_t = spt[1]->get_node(cur);
 		if (vertex_t == NULL)
 		{
 			printf("couldn't find node in tree\n");
@@ -241,7 +240,7 @@ void EVENTS::compute_bend_events()
 	{
 		for (int j = 0; j < queue[i].size(); j++)
 		{
-			queue[i][j]->compute_shortest_path_to_los(shortest_path, spt_s,spt_t);
+			queue[i][j]->compute_shortest_path_to_los(shortest_path, spt);
 		}
 	}
 

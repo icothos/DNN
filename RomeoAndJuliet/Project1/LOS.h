@@ -94,6 +94,10 @@ public:
 	{
 		foot_is_P_vertex = is_polygon_vertex;
 	}
+	void set_path_angle(float _angle)
+	{
+		path_event_angle = _angle;
+	}
 
 	void compute_shortest_path_to_los(vector<int> shortest_path, SPT** spt);
 	bool compute_other_endpoint(bool is_type);

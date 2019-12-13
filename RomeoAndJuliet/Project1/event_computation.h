@@ -55,6 +55,18 @@ void EVENTS::sort_boundary_events()
 {
 	for (int i = 0; i < queue.size()-1; i++)
 	{
+		LOS* path = queue[i][0];
+		for (int j = 0; j < queue[i].size(); j++)
+		{
+			LOS* boundary = queue[i][j];
+			float angle = calculate_angle_between_positive(path->get_p1(), path->get_p2(), boundary->get_p1(), boundary->get_p2());
+			boundary->set_path_angle(angle);
+		}
+		sort(queue[i].begin(), queue[i].end(), compare_by_angle);
+
+		/*
+		//set path_angle separately
+		//sort by path_angle
 		sort(queue[i].begin(), queue[i].end(), compare_by_angle);
 		
 		float angle = calculate_angle_between_positive(shortest_path[i + 1], shortest_path[i + 2], shortest_path[i], shortest_path[i + 1]);
@@ -68,8 +80,10 @@ void EVENTS::sort_boundary_events()
 			sorted.insert(sorted.end(), queue[i].begin(), queue[i].end()-1);
 
 			queue[i] = sorted;
-		}
+		}*/
 	}
+
+	printf("sorting boundary events is complete\n");
 }
 
 /* adds a LOS to the queue vector for every edge in the shortest path (s,t) */
@@ -246,7 +260,7 @@ void EVENTS::compute_bend_events()
 
 	printf("done computing all the shortest paths\n");
 
-	/*
+	
 	vector<int> prev = queue[0][0]->get_pi_s_l();// int prev_size = queue[0][0]->get_pi_s_l();
 	for (int i = 0; i < queue.size(); i++)
 	{
@@ -255,9 +269,9 @@ void EVENTS::compute_bend_events()
 			vector<int> cur = queue[i][j]->get_pi_s_l();
 			if (prev.size() != cur.size())
 			{
-				printf("i: %d j: %d\n",i,j);
 				print_vector(prev);
 				print_vector(cur);
+				//continue on from here
 			}
 			prev = cur;
 		}
@@ -267,5 +281,5 @@ void EVENTS::compute_bend_events()
 
 
 	printf("done computing bend events\n");
-	*/
+	
 }

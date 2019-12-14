@@ -98,7 +98,11 @@ public:
 	{
 		path_event_angle = _angle;
 	}
-
+	void set_endpoint(int idx, Point p)
+	{
+		if (idx == 0 || idx == 1)
+			endpoint[idx] = p;
+	}
 	void compute_shortest_path_to_los(vector<int> shortest_path, SPT** spt);
 	bool compute_other_endpoint(bool is_type);
 	vector<Point> get_shortest_path_to_line(bool s);
@@ -170,6 +174,10 @@ Point foot_of_perpendicular(int p, Point origin, Point dest)
 	else if (ay == by)//horizontal line
 	{
 		return Point(px, ay);
+	}
+	else if (origin.check_equal(pp) || dest.check_equal(pp))
+	{
+		return pp;
 	}
 	else {
 		double slope = (double)(ay - by) / (ax - bx);
@@ -560,6 +568,7 @@ Point* get_line_intersection(int p1, int p2, int q1, int q2)
 	Point newP = Point(x, y);
 	return &newP;
 }
+
 
 Point * LOS::get_endpoint(int from, int to, int tri, int vertex1, int vertex2,bool first)
 {

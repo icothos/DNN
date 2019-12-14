@@ -248,6 +248,141 @@ void print_vector(vector<int> vec)
 	}
 	printf("\n");
 }
+
+bool is_polygon_edge(int diag)
+{
+	int p1 = diagonal_list[diag].get_origin();
+	int p2 = diagonal_list[diag].get_dest();
+
+	if (abs(p1 - p2) == 1)
+		return true;
+	if (p1 * p2 == 0 && p1 + p2 == v_num - 1)
+		return true;
+	else
+		return false;
+}
+bool is_polygon_edge(int p1, int p2)
+{
+	if (abs(p1 - p2) == 1)
+		return true;
+	if (p1 * p2 == 0 && p1 + p2 == v_num - 1)
+		return true;
+	else
+		return false;
+}
+int find_diagonal(int p1, int p2)
+{
+	for (int i = 0; i < diagonal_list.size(); i++)
+	{
+		if (diagonal_list[i].check_same_edge(p1, p2))
+			return i;
+	}
+
+	return -1;
+}
+
+int opposite_tri(int current_tri, int diag)
+{
+	int* tri_cand = diagonal_list[diag].get_triangle();
+	int new_tri;
+
+	if (tri_cand[0] == current_tri)
+		new_tri = tri_cand[1];
+	else
+		new_tri = tri_cand[0];
+
+	if (new_tri == -1)
+	{
+		return -1;
+	}
+	else
+		return new_tri;
+}
+
+Point compute_bend_event_endpoint(int p1, int p2, int rotation_vertex)
+{
+	Point foot = foot_of_perpendicular(rotation_vertex, point_list[p1], point_list[p2]);
+	int foot_tri = point_state.find_triangle(foot);
+	int vertex[2];
+
+	int tri = choose_triangle(p2, p1, vertex);
+	if (tri == foot_tri)
+		return foot;	
+
+	while (!is_polygon_edge(vertex[0],vertex[1]))
+	{
+		//set the new diag (vertex[0], vertex[1])
+		int* diag_list = t_list[tri].get_d_list();
+		int diag = -1;
+		for (int i = 0; i < 3; i++)
+		{
+			int d = diag_list[i];
+			if (d != -1 && diagonal_list[d].check_same_edge(vertex[0], vertex[1]))
+			{
+				diag = d;
+				break;
+			}
+		}
+		//find opposite triangle to diag
+		tri = opposite_tri(tri, diag);
+		if (tri == foot_tri)
+			return foot;
+
+		//getting the other endpoint
+		Triangle t = t_list[tri];
+		int* p_list = t.get_p_list();
+		int other_p;
+		for (int i = 0; i < 3; i++)
+		{
+			if (p_list[i] != vertex[0] && p_list[i] != vertex[1])
+			{
+				other_p = p_list[i];
+				break;
+			}
+		}
+
+		//setting vertex[0] and vertex[1] -> the next diag
+		if (check_penetration(p1, p2, p2, vertex[0], other_p))
+		{
+			vertex[1] = other_p;
+		}
+		else if (check_penetration(p1, p2, p2, vertex[1], other_p))
+		{
+			vertex[0] = other_p;
+		}
+	}
+
+	//diag should be the polygon edge
+	return *get_line_intersection(p1, p2,vertex[0],vertex[1]);
+
+}
+LOS* add_bend_event(LOS* path_event, int rotation_vertex, bool first)
+{
+	//get the foot of perpendicular from the rotation vertex to line(p1,p2)
+	int p1 = path_event->get_p1();
+	int p2 = path_event->get_p2();
+	Point foot = foot_of_perpendicular(rotation_vertex, point_list[p1], point_list[p2]);
+	
+	//if the foot is in the polygon boundary
+	int valid = point_state.find_triangle(foot);
+	if (valid != -1)
+	{
+		LOS los(-1, rotation_vertex, -1, rotation_vertex, -1, BEND);
+		los.set_endpoint(0, foot);
+		return &los;
+		//los connects points rotation_vertex and foot
+	}
+	else //not inside the polygon ->we find the intersection with the polygon boundary
+	{
+		//guess what!? we already computed it!! it's part of the path event
+		foot = path_event->get_endpoint(first);
+		LOS los(-1, rotation_vertex, -1, rotation_vertex, -1, BEND);
+		los.set_endpoint(0, foot);
+		return &los;
+	}
+
+}
+
 void EVENTS::compute_bend_events()
 {
 	for (int i = 0; i < queue.size(); i++)
@@ -269,9 +404,11 @@ void EVENTS::compute_bend_events()
 			vector<int> cur = queue[i][j]->get_pi_s_l();
 			if (prev.size() != cur.size())
 			{
-				print_vector(prev);
-				print_vector(cur);
-				//continue on from here
+				vector<int>* bigger = (prev.size() > cur.size()) ? &prev : &cur;
+				int a = bigger->at(bigger->size() - 2);
+				int b = bigger->at(bigger->size() - 1);
+				if(a!=shortest_path[i] && b!=shortest_path[i])
+					Point test = compute_bend_event_endpoint(a, b, shortest_path[i]);
 			}
 			prev = cur;
 		}

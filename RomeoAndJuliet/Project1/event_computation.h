@@ -299,6 +299,7 @@ int opposite_tri(int current_tri, int diag)
 		return new_tri;
 }
 
+/*computes the endpoint of bend event that is perpendicular to line (p1, p2) and passes through the rotation vertex*/
 Point compute_bend_event_endpoint(int p1, int p2, int rotation_vertex)
 {
 	Point foot = foot_of_perpendicular(rotation_vertex, point_list[p1], point_list[p2]);
@@ -395,7 +396,59 @@ void EVENTS::compute_bend_events()
 
 	printf("done computing all the shortest paths\n");
 
-	
+	//gathering the turning points (∫Ø∞Ó¡°)
+	//they can't have bend events with themselves as the rotation vertex
+	vector<int> turningP;
+	if (shortest_path.size() > 3) {
+		bool prev_side = is_left(shortest_path[2], shortest_path[0], shortest_path[1]);
+		for (int i = 1; i <= shortest_path.size() - 3; i++)
+		{
+			bool side = is_left(shortest_path[i + 2], shortest_path[i], shortest_path[i + 1]);
+			if (side != prev_side)
+			{
+				turningP.push_back(shortest_path[i + 1]);
+				prev_side = side;
+			}
+		}
+	}
+
+	//search all the pi_s_l's and detect the differences
+	vector<int> prev = queue[0][0]->get_pi_s_l();
+	vector<int> cur;
+	for (int i = 0; i < queue.size()-1; i++)
+	{
+		int rotation = shortest_path[i+1];
+		for (int j = 0; j < queue[i].size(); j++)
+		{
+			cur = queue[i][j]->get_pi_s_l();
+
+			//(probably) equivalent to a change in the combinatorial structure
+
+			if(prev.back()!=cur.back())
+			{
+				if (j == 0)
+					rotation = shortest_path[i];
+
+				printf("%d %d %d\n", rotation, prev.back(), cur.back());
+				//check if the line lies between two consecutive path events
+
+				//the last elements of both prev and cur should make up the line
+				//that the corresponding bend event should be perpendicular to
+
+				//if it's not a turning point
+				if (find(turningP.begin(), turningP.end(), rotation) == turningP.end())
+				{
+					Point test = compute_bend_event_endpoint(prev.back(), cur.back(), rotation);
+					printf("before we add a new bend event with this endpoint, let's check for correctness\n");
+					
+				}
+			}
+
+			prev = cur;
+		}
+	}
+
+	/*
 	vector<int> prev = queue[0][0]->get_pi_s_l();// int prev_size = queue[0][0]->get_pi_s_l();
 	for (int i = 0; i < queue.size(); i++)
 	{
@@ -407,12 +460,14 @@ void EVENTS::compute_bend_events()
 				vector<int>* bigger = (prev.size() > cur.size()) ? &prev : &cur;
 				int a = bigger->at(bigger->size() - 2);
 				int b = bigger->at(bigger->size() - 1);
-				if(a!=shortest_path[i] && b!=shortest_path[i])
+				if (a != shortest_path[i] && b != shortest_path[i]) {
 					Point test = compute_bend_event_endpoint(a, b, shortest_path[i]);
+					printf("blob\n");
+				}
 			}
 			prev = cur;
 		}
-	}
+	}*/
 	//for every consecutive event... we have to see whether 
 	//there is a change in the combinatorial structure of the path
 

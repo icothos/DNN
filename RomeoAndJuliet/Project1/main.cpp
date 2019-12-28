@@ -942,8 +942,11 @@ void display() {
 	{
 		for (int j = 1; j < Queue[i].size(); j++)
 		{
-			glVertex2d(point_list[Queue[i][j]->get_p1()].get_x(), point_list[Queue[i][j]->get_p1()].get_y());
-			glVertex2d(point_list[Queue[i][j]->get_p2()].get_x(), point_list[Queue[i][j]->get_p2()].get_y());
+			if (Queue[i][j]->get_type() != BEND)
+			{
+				glVertex2d(point_list[Queue[i][j]->get_p1()].get_x(), point_list[Queue[i][j]->get_p1()].get_y());
+				glVertex2d(point_list[Queue[i][j]->get_p2()].get_x(), point_list[Queue[i][j]->get_p2()].get_y());
+			}
 		}
 	}
 	glEnd();
@@ -955,8 +958,17 @@ void display() {
 	{
 		for (int j = 1; j < Queue[i].size(); j++)
 		{
-			glVertex2d(point_list[Queue[i][j]->get_p1()].get_x(), point_list[Queue[i][j]->get_p1()].get_y());
-			glVertex2d((Queue[i][j]->get_endpoint(false)).get_x(), (Queue[i][j]->get_endpoint(false)).get_y());
+			if (Queue[i][j]->get_type() != BEND)
+			{
+				glVertex2d(point_list[Queue[i][j]->get_p1()].get_x(), point_list[Queue[i][j]->get_p1()].get_y());
+				glVertex2d((Queue[i][j]->get_endpoint(false)).get_x(), (Queue[i][j]->get_endpoint(false)).get_y());
+			}
+			else
+			{
+				glVertex2d(point_list[Queue[i][j]->get_p1()].get_x(), point_list[Queue[i][j]->get_p1()].get_y());
+				glVertex2d((Queue[i][j]->get_endpoint(false)).get_x(), (Queue[i][j]->get_endpoint(false)).get_y());
+
+			}
 		}
 	}
 	glEnd();
@@ -971,6 +983,9 @@ void display() {
 		
 	}
 	glEnd();
+
+	
+
 
 	/* Draws the shortest path computed using the shortest path tree */
 	set_color_rgb(43, 117, 90);

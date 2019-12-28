@@ -180,9 +180,9 @@ Point foot_of_perpendicular(int p, Point origin, Point dest)
 		return pp;
 	}
 	else {
-		double slope = (double)(ay - by) / (ax - bx);
-		double qx = slope / (1 + slope * slope) * (py + (double)px / slope + slope * ax - ay);
-		double qy = ay + slope * (qx - ax);
+		double slope = (double)(ay -(double) by) / ((double)ax - (double)bx);
+		double qx = (double)slope / (double)(1 + slope * slope) * (py + (double)px / slope + (double)slope * (double)ax - (double)ay);
+		double qy = ay + (double)slope * (qx - (double)ax);
 
 		return Point(qx, qy);
 	}

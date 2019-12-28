@@ -440,6 +440,15 @@ void EVENTS::compute_bend_events()
 				{
 					Point test = compute_bend_event_endpoint(prev.back(), cur.back(), rotation);
 					printf("before we add a new bend event with this endpoint, let's check for correctness\n");
+					LOS* bend = new LOS(-1, rotation, -1, rotation, 0, BEND);
+					bend->set_endpoint(0, test); //only setting one endpoint for now
+					if (j == 0)
+					{
+						queue[i - 1].insert(queue[i - 1].end(), bend);
+					}
+					else {
+						queue[i].insert(queue[i].begin() + j, bend);
+					}
 					
 				}
 			}

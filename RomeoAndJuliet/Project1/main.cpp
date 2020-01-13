@@ -933,7 +933,44 @@ void display() {
 		display_edge(diagonal_list[i]);
 	}
 	
-	/* Mark the boundary events (path events overlap with the shortest path) */
+
+
+	glLineWidth(3);
+	vector<vector<LOS*>> Queue = Events.get_queue();
+	glBegin(GL_LINES);
+	for (int i = 0; i < Queue.size(); i++)
+	{
+		for (int j = 0; j < Queue[i].size(); j++)
+		{
+			switch (Queue[i][j]->get_type())
+			{
+			case PATH:
+				set_color_rgb(255, 0, 0);
+				glVertex2d(Queue[i][j]->get_endpoint(true).get_x(), Queue[i][0]->get_endpoint(true).get_y());
+				glVertex2d((Queue[i][j]->get_endpoint(false)).get_x(), (Queue[i][0]->get_endpoint(false)).get_y());
+				break;
+			case BOUNDARY_S:
+			case BOUNDARY_T:
+				set_color_rgb(0, 255, 0);
+
+				glVertex2d(point_list[Queue[i][j]->get_p2()].get_x(), point_list[Queue[i][j]->get_p2()].get_y());
+				glVertex2d((Queue[i][j]->get_endpoint(false)).get_x(), (Queue[i][j]->get_endpoint(false)).get_y());
+
+				break;
+			default://the bend events
+				set_color_rgb(0, 0, 255);
+				glVertex2d(Queue[i][j]->get_endpoint(true).get_x(), Queue[i][0]->get_endpoint(true).get_y());
+				glVertex2d((Queue[i][j]->get_endpoint(false)).get_x(), (Queue[i][0]->get_endpoint(false)).get_y());
+				break;
+			}
+		}
+	}
+	glEnd();
+
+
+
+	/*
+	// Mark the boundary events (path events overlap with the shortest path) 
 	glLineWidth(3);
 	set_color_rgb(207, 99, 10); //green
 	vector<vector<LOS*>> Queue = Events.get_queue();
@@ -951,7 +988,9 @@ void display() {
 	}
 	glEnd();
 
-	/* Mark the extensions of the boundary events */
+
+	
+	// Mark the extensions of the boundary events 
 	//set_color_rgb(242, 200, 228); //green
 	glBegin(GL_LINES);
 	for (int i = 0; i < Queue.size(); i++)
@@ -973,7 +1012,7 @@ void display() {
 	}
 	glEnd();
 	
-	/* Mark the extensions of the path events */
+	//Mark the extensions of the path events 
 	set_color_rgb(255, 192, 203); //green
 	glBegin(GL_LINES);
 	for (int i = 0; i < Queue.size(); i++)
@@ -987,7 +1026,7 @@ void display() {
 	
 
 
-	/* Draws the shortest path computed using the shortest path tree */
+	//Draws the shortest path computed using the shortest path tree 
 	set_color_rgb(43, 117, 90);
 	glLineWidth(4);
 	glBegin(GL_LINES);
@@ -998,7 +1037,7 @@ void display() {
 	}
 	glEnd();
 
-	/* Testing out the shortest path to line algorithm */
+	 Testing out the shortest path to line algorithm 
 	set_color_rgb(46, 92, 128);
 	glLineWidth(4);
 	glBegin(GL_LINES);
@@ -1007,7 +1046,7 @@ void display() {
 		glVertex2d(shortest_path_to_line[i].get_x(), shortest_path_to_line[i].get_y());
 		glVertex2d(shortest_path_to_line[i + 1].get_x(), shortest_path_to_line[i + 1].get_y());
 	}
-	glEnd();
+	glEnd();*/
 
 	/* Emphasizes the two test points (start and end vertices of the shortest path) */
 	glColor3d(0, 0.47, 0.43);

@@ -300,9 +300,26 @@ int opposite_tri(int current_tri, int diag)
 }
 
 /*computes the endpoint of bend event that is perpendicular to line (p1, p2) and passes through the rotation vertex*/
-Point compute_bend_event_endpoint(int p1, int p2, int rotation_vertex)
+Point compute_bend_event_endpoint(int p1, int p2, int rotation_vertex,SPT* spt)
 {
 	Point foot = foot_of_perpendicular(rotation_vertex, point_list[p1], point_list[p2]);
+	double x = foot.get_x();
+	double diff1 = x - point_list[p1].get_x();
+	double diff2 = x - point_list[p2].get_x();
+	if (diff1*diff2 < 0)
+	{
+		//return the parent in the spt
+		SPTnode* parent = spt->get_pred(rotation_vertex);
+		int vertex = parent->get_id();
+		if (vertex == p1 || vertex == p2)
+			return point_list[vertex];
+		else
+		{
+			printf("what is this\n");
+			exit(30);
+		}
+	}
+
 	int foot_tri = point_state.find_triangle(foot);
 	int vertex[2];
 
@@ -411,7 +428,7 @@ void EVENTS::compute_bend_events()
 			}
 		}
 	}
-
+	
 	//search all the pi_s_l's and detect the differences
 	vector<int> prev = queue[0][0]->get_pi_s_l();
 	vector<int> cur;
@@ -420,43 +437,66 @@ void EVENTS::compute_bend_events()
 		int rotation = shortest_path[i+1];
 		for (int j = 0; j < queue[i].size(); j++)
 		{
-			cur = queue[i][j]->get_pi_s_l();
 
-			//(probably) equivalent to a change in the combinatorial structure
+			if (queue[i][j]->get_type() != BEND) {
+				cur = queue[i][j]->get_pi_s_l();
 
-			if(prev.back()!=cur.back())
-			{
-				if (j == 0)
-					rotation = shortest_path[i];
+				//(probably) equivalent to a change in the combinatorial structure
 
-				printf("%d %d %d\n", rotation, prev.back(), cur.back());
-				//check if the line lies between two consecutive path events
-
-				//the last elements of both prev and cur should make up the line
-				//that the corresponding bend event should be perpendicular to
-
-				//if it's not a turning point
-				if (find(turningP.begin(), turningP.end(), rotation) == turningP.end())
+				if (prev.back() != cur.back())
 				{
-					Point test = compute_bend_event_endpoint(prev.back(), cur.back(), rotation);
-					printf("before we add a new bend event with this endpoint, let's check for correctness\n");
-					LOS* bend = new LOS(-1, rotation, -1, rotation, 0, BEND);
-					bend->set_endpoint(0, test); //only setting one endpoint for now
 					if (j == 0)
-					{
-						queue[i - 1].insert(queue[i - 1].end(), bend);
-					}
-					else {
-						queue[i].insert(queue[i].begin() + j, bend);
-					}
-					
-				}
-			}
+						rotation = shortest_path[i];
 
-			prev = cur;
+					if (find(turningP.begin(), turningP.end(), rotation) == turningP.end())
+					{
+						Point test = compute_bend_event_endpoint(prev.back(), cur.back(), rotation, spt[0]);
+						LOS* bend = new LOS(-1, rotation, -1, rotation, 0, BEND);
+						bend->set_endpoint(0, test); //only setting one endpoint for now
+						//bend->compute_other_endpoint(true);
+						if (j == 0)
+							queue[i - 1].insert(queue[i - 1].end(), bend);
+						else
+							queue[i].insert(queue[i].begin() + j, bend);
+					}
+				}
+				prev = cur;
+			}
 		}
 	}
 
+	/*
+	prev = queue[0][0]->get_pi_t_l();
+	for (int i = 0; i < queue.size() - 1; i++)
+	{
+		int rotation = shortest_path[i+1];
+		for (int j = 0; j < queue[i].size(); j++)
+		{
+			if (queue[i][j]->get_type() != BEND) {
+				cur = queue[i][j]->get_pi_t_l();
+
+				//(probably) equivalent to a change in the combinatorial structure
+
+				if (prev.back() != cur.back())
+				{
+					if (j == 0)
+						rotation = shortest_path[i];
+
+					if (find(turningP.begin(), turningP.end(), rotation) == turningP.end())
+					{
+						Point test = compute_bend_event_endpoint(prev.back(), cur.back(), rotation, spt[1]);
+						LOS* bend = new LOS(-1, rotation, -1, rotation, 0, BEND);
+						bend->set_endpoint(0, test); //only setting one endpoint for now
+						if (j == 0)
+							queue[i - 1].insert(queue[i - 1].end(), bend);
+						else
+							queue[i].insert(queue[i].begin() + j, bend);
+					}
+				}
+				prev = cur;
+			}
+		}
+	}*/
 	/*
 	vector<int> prev = queue[0][0]->get_pi_s_l();// int prev_size = queue[0][0]->get_pi_s_l();
 	for (int i = 0; i < queue.size(); i++)

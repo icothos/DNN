@@ -176,6 +176,65 @@ void EVENTS::compute_boundary_events()
 	sort_boundary_events();
 }
 
+
+/* Returns the point that the extension of (rotation, endpoint)
+meets with the boundary */
+Point* compute_other_endpoint(int rotation, Point endpoint)
+{
+	Point* otherEndpoint;
+	int vertex[2] = { -1,-1 };
+	point_list.push_back(endpoint);
+
+	int tri = choose_triangle(rotation, point_list.size() - 1, vertex);
+	//point_list.pop_back();
+
+	if (tri == -1)
+	{
+		printf("failed to find the triangle penetrated\n");
+		return NULL;
+	}
+
+	while (1) {
+		//the VERTEX array should be set
+		int diff = abs(vertex[0] - vertex[1]);
+		if (diff == 1 || diff == (v_num - 1)) //intersection point is on the polygon boundary
+		{
+			otherEndpoint = get_line_intersection(rotation, point_list.size() - 1, vertex[0], vertex[1]);
+			break;
+			//what does edge[0] and edge[1] do??
+		}
+		else
+		{
+			int new_tri = -1;
+			int* d_list = t_list[tri].get_d_list();
+			int diag = -1; //diagonal index of the connecting diagonal
+			for (int i = 0; i < 3; i++)
+			{
+				if (d_list[i] != -1 && diagonal_list[d_list[i]].check_same_point(vertex[0]) != -1 && diagonal_list[d_list[i]].check_same_point(vertex[1]) != -1)
+				{
+					diag = d_list[i];
+					break;
+				}
+			}
+			if (diag == -1)
+			{
+				printf("couldn't find a valid diagonal\n");
+				return NULL;
+			}
+
+			//set the next triangle to search
+			new_tri = diagonal_list[diag].get_triangle()[0];
+			if (new_tri == tri)
+				new_tri = diagonal_list[diag].get_triangle()[1];
+
+			//int* new_d_list = t_list[new_tri].get_d_list();
+			//start from here yo!!
+		}
+	}
+
+	point_list.pop_back();
+	return otherEndpoint;
+}
 /* Sets the foot_bool, pi_s_l, pi_t_l for the given los in the queue */
 /*
 void EVENTS::compute_shortest_path_to_line(int i, int j)

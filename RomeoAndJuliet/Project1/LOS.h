@@ -625,7 +625,6 @@ Point * LOS::get_endpoint(int from, int to, int tri, int vertex1, int vertex2,bo
 	}
 }
 
-
 bool LOS::compute_other_endpoint(bool is_type)
 {
 	int vertex[2] = { -1, -1 };

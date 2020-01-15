@@ -750,7 +750,7 @@ void add_test_point(int button, int state, int x, int y) {
 				EVENTS* events = new EVENTS(spath, spt_s, spt_t);
 				events->compute_path_events();
 				events->compute_boundary_events();
-				events->compute_bend_events();
+				//ents->compute_bend_events();
 
 				Events = *events;
   				printf("done computing the boundary and path events!\n");
@@ -954,7 +954,7 @@ void display() {
 				set_color_rgb(0, 255, 0);
 
 				glVertex2d(point_list[Queue[i][j]->get_p2()].get_x(), point_list[Queue[i][j]->get_p2()].get_y());
-				glVertex2d((Queue[i][j]->get_endpoint(false)).get_x(), (Queue[i][j]->get_endpoint(false)).get_y());
+				glVertex2d((Queue[i][j]->get_endpoint(0)).get_x(), (Queue[i][j]->get_endpoint(0)).get_y());
 
 				break;
 			default://the bend events

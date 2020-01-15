@@ -6,7 +6,7 @@
 #include "LOS.h"
 #define INT_MAX 100000000
 using namespace std;
-
+Point* compute_other_endpoint(int rotation, Point endpoint);
 
 class EVENTS {
 	int next_line_id;
@@ -96,10 +96,16 @@ void EVENTS::compute_path_events()
 		
 		//float angle = i == 0 ? 0 : calculate_angle_between_positive(shortest_path[i], shortest_path[i + 1], shortest_path[i], shortest_path[i - 1]);
 		LOS* los = new LOS(next_line_id++, prev, cur, cur, 0, PATH);
-		los->compute_other_endpoint(true);
+		Point* end1 = compute_other_endpoint(los->get_p1(), point_list[los->get_p2()]);
+		Point* end2 = compute_other_endpoint(los->get_p2(), point_list[los->get_p1()]);
+		los->set_endpoint(0, *end1);
+		los->set_endpoint(1, *end2);
+		//los->compute_other_endpoint(true);
 		//los->extend_path_event();
 		queue[i].push_back(los);
 	}
+
+	printf("done with the path events\n");
 }
 
 /* determines whether the line (*not vector) (CUR, P) is tangent to the path (PREV~CUR~NEXT) at vertex CUR */
@@ -167,13 +173,19 @@ void EVENTS::compute_boundary_events()
 				{
 					float angle = calculate_angle_between_positive(cur, vertex_id, prev, cur);
 					LOS* los = new LOS(next_line_id++, cur, vertex_id, cur, angle, j < s_size ? BOUNDARY_S : BOUNDARY_T);// BOUNDARY);
-					los->compute_other_endpoint(false);
+					Point* end1 = compute_other_endpoint(los->get_p1(), point_list[los->get_p2()]);
+					los->set_endpoint(0, *end1);
+					
+					
+					//s->compute_other_endpoint(false);
 					queue[i-1].push_back(los);
 				}
 			}
 		}
 	}
 	sort_boundary_events();
+
+	printf("done with the boundary events\n");
 }
 
 
@@ -191,6 +203,7 @@ Point* compute_other_endpoint(int rotation, Point endpoint)
 	if (tri == -1)
 	{
 		printf("failed to find the triangle penetrated\n");
+		point_list.pop_back();
 		return NULL;
 	}
 
@@ -219,7 +232,8 @@ Point* compute_other_endpoint(int rotation, Point endpoint)
 			if (diag == -1)
 			{
 				printf("couldn't find a valid diagonal\n");
-				return NULL;
+				otherEndpoint = NULL;
+				break;
 			}
 
 			//set the next triangle to search
@@ -227,8 +241,66 @@ Point* compute_other_endpoint(int rotation, Point endpoint)
 			if (new_tri == tri)
 				new_tri = diagonal_list[diag].get_triangle()[1];
 
-			//int* new_d_list = t_list[new_tri].get_d_list();
-			//start from here yo!!
+			int* points = t_list[new_tri].get_p_list();
+			vertex[0] = -1;
+			for (int i = 0; i < 3; i++)
+			{
+
+				if (diagonal_list[diag].check_same_point(points[i])!=-1
+					&& diagonal_list[diag].check_same_point(points[(i + 1) % 3])!=-1)
+				{
+
+				}
+				else
+				{
+					if (check_penetration(point_list.size() - 1, rotation, point_list.size() - 1, points[i], points[(i + 1) % 3]))
+					{
+						vertex[0] = points[i];
+						vertex[1] = points[(i + 1) % 3];
+						break;
+					}
+				}
+			}
+
+			if (vertex[0] == -1)
+			{
+				printf("failed to set vertex\n");
+				otherEndpoint = NULL;
+				break;
+			}
+
+			tri = new_tri;
+			/*
+			int* new_d_list = t_list[new_tri].get_d_list();
+
+			int d_cand1 =-1, d_cand2=-1;
+			for (int i = 0; i < 3; i++)
+			{
+				if (diagonal_list[new_d_list[i]] == diag)
+				{
+					d_cand1 = new_d_list[(i + 1) % 3];
+					d_cand2 = new_d_list[(i + 2) % 3];
+					break;
+				}
+			}
+			
+			if (d_cand1 == -1 || d_cand2 == -1)
+			{
+				printf("failed to set valid diagonal candidates\n");
+				otherEndpoint = NULL;
+				break;
+			}
+
+			int d_final = 1;
+			
+			if (check_penetration(point_list.size() - 1, rotation, point_list.size() - 1, diagonal_list[d_cand1].get_origin(), diagonal_list[d_cand1].get_dest()))
+			{
+				d_final = 0;
+			}
+			vertex[0] = diagonal_list[d_final].get_origin();
+			vertex[1] = diagonal_list[d_final].get_dest();
+
+			//start from here yo!!*/
 		}
 	}
 

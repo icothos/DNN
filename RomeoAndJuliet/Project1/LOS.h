@@ -565,8 +565,8 @@ Point* get_line_intersection(int p1, int p2, int q1, int q2)
 
 	point_type x = (b2 * c1 - b1 * c2) / determinant;
 	point_type y = (a1 * c2 - a2 * c1) / determinant;
-	Point newP = Point(x, y);
-	return &newP;
+	Point* newP = new Point(x, y);
+	return newP;
 }
 
 

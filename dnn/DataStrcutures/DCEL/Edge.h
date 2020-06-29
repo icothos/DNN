@@ -10,6 +10,7 @@ public:
 	Edge(Edge*);
 	~Edge();
 	bool operator==(Edge);
+	bool on(Point* p);
 	Point* crossing(Edge*, bool);
 	Point* gets();
 	Point* gett();

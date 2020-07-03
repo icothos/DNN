@@ -1,4 +1,7 @@
 #include "Edge.h"
+#include "Point.h"
+#include <algorithm>
+#define ERR 1e-6
 
 Edge::Edge() {
 	this->s = new Point<>();
@@ -21,16 +24,22 @@ Edge::~Edge() {
 }
 
 bool Edge::on(Point* p) {
-	double d = this->gett()->getx() - this->gets()->getx();
-	if (d == 0) {
-		if (p->getx() == this->gett()->getx() && p->gety() <= max(this->gett()->gety(), this->gets()->gety()) && p->gety() >= min(this->gett()->gety(), this->gets()->gety())) {
+	double s_x = this->gets()->getx();
+	double s_y = this->gets()->gety();
+	double t_x = this->gett()->getx();
+	double t_y = this->gett()->gety();
+	double p_x = p->getx();
+	double p_y = p->gety();
+	double d = t_x - s_x;
+	if (abs(d) < ERR) {
+		if (abs(p_x - t_x) <= ERR && p_y <= std::max(t_y, s_y) && p_y >= std::min(t_y, s_y)) {
 			return true;
 		}
 		else return false;
 	}
 	else {
-		double y = ((this->gett()->gety() - this->gets()->gety()) / d) * (p->getx() - this->gets()->getx()) + this->gets()->gety();
-		if (y == p->gety() && p->gety() <= max(this->gett()->gety(), this->gets()->gety()) && p->gety() >= min(this->gett()->gety(), this->gets()->gety())) {
+		double y = ((t_y - s_y) / d) * (p_x - s_x) + s_y;
+		if (abs(y - p_y) <= ERR && p_y <= std::max(t_y, s_y) && p_y >= std::min(t_y, s_y)) {
 			return true;
 		}
 		else return false;
@@ -38,7 +47,17 @@ bool Edge::on(Point* p) {
 }
 
 Point* Edge::crossing(Edge* _e, bool closed = true) {
-	double d = (_e->gett()->gety() - _e->gets()->gety()) * (this->t->getx() - this->s->getx()) - (_e->gett()->getx() - _e->gets()->getx()) * (this->t->gety() - this->s->gety());
+
+	double x_1 = this->gets()->getx();
+	double y_1 = this->gets()->gety();
+	double x_2 = this->gett()->getx();
+	double y_2 = this->gett()->gety();
+	double x_3 = _e->gets()->getx();
+	double y_3 = _e->gets()->gety();
+	double x_4 = _e->gett()->getx();
+	double y_4 = _e->gett()->gety();
+
+	double d = (y_4 - y_3) * (x_2 - x_1) - (x_4 - x_3) * (y_2 - y_1);
 	if (d == 0) {
 		if (t == 0 && closed) {
 			if (this->on(_e->gets())) {
@@ -47,19 +66,22 @@ Point* Edge::crossing(Edge* _e, bool closed = true) {
 			else if (this->on(_e->gett())) {
 				return _e->gett();
 			}
-			else {
+			else if (_e->on(this->gets())) {
 				return this->gets();
 			}
+			else if (_e->on(this->gett())) {
+				return this->gett();
+			}
+			else return nullptr;
 		}
 		else return nullptr;
 	}
 	else {
-		double t = (_e->gett()->getx() - _e->gets()->getx()) * (this->s->gety() - _e->gets()->gety()) - (_e->gett()->gety() - _e->gets()->gety()) * (this->s->getx() - _e->gets()->getx());
-		double s = (this->t->getx() - this->s->getx()) * (this->s->gety() - _e->gets()->gety()) - (this->t->gety() - this->s->gety()) * (this->s->getx() - _e->gets()->getx());
+		double t = (x_4 - x_3) * (y_1 - y_3) - (y_4 - y_3) * (x_1 - x_3);
+		double s = (x_2 - x_1) * (y_1 - y_3) - (y_2 - y_1) * (x_1 - x_3);
 		t = t / d;
 		s = s / d;
 		if (t > 1 || s > 1 || t < 0 || s < 0) {
-			printf("dont intersect");
 			return nullptr;
 		}
 		else if (((t == 0 || t == 1) || (s == 0 || s == 1)) && !closed) {
@@ -67,8 +89,8 @@ Point* Edge::crossing(Edge* _e, bool closed = true) {
 			return nullptr;
 		}
 		else {
-			double x = (1 - t) * this->s->getx() + t * this->t->getx();
-			double y = (1 - t) * this->s->gety() + t * this->t->gety();
+			double x = (1 - t) * x_1 + t * x_2;
+			double y = (1 - t) * y_1 + t * y_2;
 			Point* P = new Point(x, y);
 			return P;
 		}

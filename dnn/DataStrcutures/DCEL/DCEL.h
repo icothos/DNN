@@ -9,6 +9,7 @@ class Face;
 
 class Vertex : public Point<double> {
 protected:
+	char* vertex_key;
 	HEdge *incidentEdge;
 public:
 	Vertex();
@@ -16,12 +17,18 @@ public:
 	Vertex(Point<double>*);
 	Vertex(Point<double>*,HEdge*);
 	~Vertex();
+
+	char* getVertexKey();
+	void setVertexKey(char*);
+
 	void setIncidentEdge(HEdge*);
 	HEdge* getIncidentEdge();
+
 };
 
 class HEdge : public Edge {
 protected:
+	char* hedge_key;
 	Vertex *origin;
 	HEdge *next, *prev, *twin;
 	Face *incidentFace;
@@ -29,31 +36,44 @@ public:
 	HEdge();
 	HEdge(Vertex*, Vertex*);
 	~HEdge();
+	
+	char* getHedgeKey();
+	void setHedgeKey(char*);
 	Vertex* getOrigin();
+	void setOrigin(Vertex*);
 	HEdge* getNext();
 	void setNext(HEdge*);
 	HEdge* getPrev();
 	void setPrev(HEdge*);
 	HEdge* getTwin();
+	void setTwin(HEdge*);
 	Face* getIncidentFace();
 	void setIncidentFace(Face*);
 };
 
 class Face {
 protected:
+	char* face_key;
 	HEdge *outer;
 	std::vector<HEdge*> *inners;
 public:
 	Face();
 	~Face();
+
+	char* getFaceKey();
+	void setFaceKey(char*);
 	bool isOutMost();
 	void setOuter(HEdge*);
 	HEdge* getOuter();
 	std::vector<HEdge*>* getInners();
+	void setInners(std::vector<HEdge*>*);
 };
 
 class DCEL {
 private:
+	int num_faces;
+	int num_hedges;
+	int num_vertices;
 	std::vector<Face*> *faces;
 	std::vector<HEdge*> *hedges;	//we store one hedge for each edges.
 	std::vector<Vertex*> *vertices;
@@ -65,9 +85,21 @@ public:
 	DCEL();
 	~DCEL();
 	std::vector<Face*>* getFaces();
+	void setFaces(std::vector<Face*>*);
 	std::vector<HEdge*>* getHedges();
+	void setHedges(std::vector<HEdge*>*);
 	std::vector<Vertex*>* getVertices();
+	void setVertices(std::vector<Vertex*>*);
+
 	void addEdge(Vertex*, Vertex*);
 	void deleteEdge(HEdge*);
 	DCEL* mergeDCEL(DCEL*);
+
+	int texttoDCEL(const char*);
+	HEdge* searchHedge(char* key);
+	Vertex* searchVertex(char* key);
+	Face* searchFace(char* key);
+	void printVertexTab();
+	void printHedgeTab();
+	void printFaceTab();
 };

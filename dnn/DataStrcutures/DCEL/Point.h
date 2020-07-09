@@ -15,6 +15,9 @@ public:
 	~Point();
 	bool operator==(Point<T>);
 	T getx(void);
+	void setx(T);
 	T gety(void);
+	void sety(T);
+
 	double distance(Point<T>);
 };

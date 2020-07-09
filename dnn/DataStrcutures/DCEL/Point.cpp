@@ -32,8 +32,19 @@ T Point<T>::getx() {
 }
 
 template <typename T>
+void Point<T>::setx(T _x) {
+	this->x = _x;
+}
+
+
+template <typename T>
 T Point<T>::gety() {
 	return this->y;
+}
+
+template <typename T>
+void Point<T>::setx(T _y) {
+	this->x = _y;
 }
 
 template <typename T>

@@ -20,7 +20,6 @@ public:
 
 	char* getVertexKey();
 	void setVertexKey(char*);
-
 	void setIncidentEdge(HEdge*);
 	HEdge* getIncidentEdge();
 

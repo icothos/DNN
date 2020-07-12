@@ -1,21 +1,23 @@
 #pragma once
 #include "Edge.h"
 #include "Point.h"
+#include <fstream>
+#include <sstream>
 #include <vector>
 
 class Vertex;
 class HEdge;
 class Face;
 
-class Vertex : public Point<double> {
+class Vertex : public Point {
 protected:
 	char* vertex_key;
 	HEdge *incidentEdge;
 public:
 	Vertex();
 	Vertex(HEdge*);
-	Vertex(Point<double>*);
-	Vertex(Point<double>*,HEdge*);
+	Vertex(Point*);
+	Vertex(Point*,HEdge*);
 	~Vertex();
 
 	char* getVertexKey();
@@ -65,7 +67,8 @@ public:
 	void setOuter(HEdge*);
 	HEdge* getOuter();
 	std::vector<HEdge*>* getInners();
-	void setInners(std::vector<HEdge*>*);
+	void addInner(HEdge*);
+	//void setInners(std::vector<HEdge*>*);
 };
 
 class DCEL {
@@ -82,6 +85,7 @@ private:
 	Vertex* rmost;
 public:
 	DCEL();
+	DCEL(FILE*);
 	~DCEL();
 	std::vector<Face*>* getFaces();
 	void setFaces(std::vector<Face*>*);
@@ -90,11 +94,14 @@ public:
 	std::vector<Vertex*>* getVertices();
 	void setVertices(std::vector<Vertex*>*);
 
+	Vertex* getLmost();
+	Vertex* getRmost();
+	Vertex* getTmost();
+	Vertex* getBmost();
+
 	void addEdge(Vertex*, Vertex*);
 	void deleteEdge(HEdge*);
 	DCEL* mergeDCEL(DCEL*);
-
-	int texttoDCEL(const char*);
 	HEdge* searchHedge(char* key);
 	Vertex* searchVertex(char* key);
 	Face* searchFace(char* key);

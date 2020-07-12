@@ -1,32 +1,30 @@
 #include "DCEL.h"
 #include "Point.h"
-#include "../AVLTree/AVLTree.h"
+//#include "../AVLTree/AVLTree.h"
 #include <algorithm>
 #include <cstdlib>
 #include <iterator>
 #include <vector>
 #include <iostream>
-#include <fstream>
-#include <sstream>
 #include <iomanip>
-#include <string>
+#include <cstring>
 
-Vertex::Vertex() : Point<double>() {
+Vertex::Vertex() : Point() {
 	this->vertex_key = nullptr;
 	this->incidentEdge = nullptr;
 }
 
-Vertex::Vertex(HEdge *_e) : Point<double>() {
+Vertex::Vertex(HEdge *_e) : Point() {
 	this->vertex_key = nullptr;
 	this->incidentEdge = _e;
 }
 
-Vertex::Vertex(Point<double> *_p) : Point<double>(_p) {
+Vertex::Vertex(Point *_p) : Point(_p) {
 	this->vertex_key = nullptr;
 	this->incidentEdge = nullptr;
 }
 
-Vertex::Vertex(Point<double> *_p, HEdge *_e) : Point(_p) {
+Vertex::Vertex(Point *_p, HEdge *_e) : Point(_p) {
 	this->vertex_key = nullptr;
 	this->incidentEdge = _e;
 }
@@ -137,7 +135,7 @@ void HEdge::setIncidentFace(Face *_f) {
 Face::Face() {
 	this->face_key = nullptr;
 	this->outer = nullptr;
-	this->inners = new std::vector<HEdge*>();
+	this->inners = new std::vector<HEdge*>;
 }
 
 Face::~Face() {
@@ -170,8 +168,13 @@ std::vector<HEdge*>* Face::getInners() {
 	return this->inners;
 }
 
+/*
 void Face::setInners(std::vector<HEdge*>* _i) {
 	this->inners = _i;
+}
+*/
+void Face::addInner(HEdge *_e){
+	this->inners->push_back(_e);
 }
 
 DCEL::DCEL() {
@@ -188,6 +191,127 @@ DCEL::DCEL() {
 	rmost = nullptr;
 	Face *of = new Face();
 	this->faces->push_back(of);
+}
+
+DCEL::DCEL(FILE* readFile) {
+	char* buffer = new char[256];
+	fgets(buffer, 256,readFile);	
+	char* context = NULL;
+
+	// Number of Faces HEdges and Vertex
+	char* token = strtok_s(buffer, "\t, \n", &context);
+	this->num_vertices = atoi(token);
+
+	token = strtok_s(NULL, "\t, \n", &context);
+	this->num_faces = atoi(token);
+
+	token = strtok_s(NULL, "\t, \n", &context);
+	this->num_hedges = atoi(token);
+
+	this->vertices = new std::vector<Vertex*>(num_vertices);
+	for (int i = 0; i < num_vertices; i++) {
+		(*this->vertices)[i] = new Vertex();
+	}
+
+	this->faces = new std::vector<Face*>(num_faces);
+	for (int i = 0; i < num_faces; i++) {
+		(*this->faces)[i] = new Face();
+	}
+	this->hedges = new std::vector<HEdge*>(num_hedges);
+	for (int i = 0; i < num_hedges; i++) {
+		(*this->hedges)[i] = new HEdge();
+	}
+
+	
+	//Set Keys of Faces HEdges and Vertexs
+	fgets(buffer, 256,readFile);
+
+	token = strtok_s(buffer, "\t, \n", &context);
+	(*this->vertices)[0]->setVertexKey(token);
+
+	for (int i = 1; i < this->num_vertices; i++) {
+		token = strtok_s(NULL, "\t, \n", &context);
+		(*this->vertices)[i]->setVertexKey(token);
+	}
+
+	fgets(buffer, 256,readFile);
+
+	token = strtok_s(buffer, "\t, \n", &context);
+	(*this->faces)[0]->setFaceKey(token);
+	for (int i = 1; i < this->num_faces; i++) {
+		token = strtok_s(NULL, "\t, \n", &context);
+		(*this->faces)[i]->setFaceKey(token);
+	}
+
+	fgets(buffer, 256,readFile);
+
+	token = strtok_s(buffer, "\t, \n", &context);
+	(*this->hedges)[0]->setHedgeKey(token);
+	for (int i = 1; i < this->num_hedges; i++) {
+		token = strtok_s(NULL, "\t, \n", &context);
+		(*this->hedges)[i]->setHedgeKey(token);
+
+	}
+
+
+	//Set Vertex information
+	for (int i = 0; i < num_vertices; i++) {
+		fgets(buffer, 256,readFile);
+		token = strtok_s(buffer, "\t, \n", &context);
+		token = strtok_s(NULL, "\t, \n", &context);
+		(*this->vertices)[i]->setx(atof(token));
+		token = strtok_s(NULL, "\t, \n", &context);
+		(*this->vertices)[i]->sety(atof(token));
+		token = strtok_s(NULL, "\t, \n", &context);
+		(*this->vertices)[i]->setIncidentEdge(this->searchHedge(token));
+
+		if(this->lmost)  this->lmost = this->lmost->getx() > (*this->vertices)[i]->getx() ? (*this->vertices)[i] : this->lmost;
+		else this->lmost = (*this->vertices)[i];
+		if(this->rmost)  this->rmost = this->rmost->getx() < (*this->vertices)[i]->getx() ? (*this->vertices)[i] : this->rmost;
+		else this->rmost = (*this->vertices)[i];
+		if(this->bmost)  this->bmost = this->bmost->gety() > (*this->vertices)[i]->gety() ? (*this->vertices)[i] : this->bmost;
+		else this->bmost = (*this->vertices)[i];
+		if(this->tmost)  this->tmost = this->tmost->gety() < (*this->vertices)[i]->gety() ? (*this->vertices)[i] : this->tmost;
+		else this->tmost = (*this->vertices)[i];
+	}
+
+	//Set Face information
+	int num_inner_components = 0;
+	for (int i = 0; i < num_faces; i++) {
+		fgets(buffer, 256,readFile);
+		token = strtok_s(buffer, "\t, \n", &context);
+		token = strtok_s(NULL, "\t, \n", &context);
+		(*this->faces)[i]->setOuter(this->searchHedge(token));
+		token = strtok_s(NULL, "\t, \n", &context);
+
+		num_inner_components = atoi(token);
+		if (num_inner_components == 0){
+			continue;
+		}	// WHY BREAK?
+		token = strtok_s(NULL, "\t, \n", &context);
+		(*this->faces)[i]->getInners()->push_back(this->searchHedge(token));
+		for (int j = 1; j < num_inner_components; j++) {
+			token = strtok_s(NULL, "\t, \n", &context);
+			(*this->faces)[i]->getInners()->push_back(this->searchHedge(token));
+		}
+	}
+
+
+	//Set Half Edge information
+	for (int i = 0; i < num_hedges; i++) {
+		fgets(buffer, 256,readFile);
+		token = strtok_s(buffer, "\t, \n", &context);
+		token = strtok_s(NULL, "\t, \n", &context);
+		(*this->hedges)[i]->setOrigin(this->searchVertex(token));
+		token = strtok_s(NULL, "\t, \n", &context);
+		(*this->hedges)[i]->setTwin(this->searchHedge(token));
+		token = strtok_s(NULL, "\t, \n", &context);
+		(*this->hedges)[i]->setIncidentFace(this->searchFace(token));
+		token = strtok_s(NULL, "\t, \n", &context);
+		(*this->hedges)[i]->setNext(this->searchHedge(token));
+		token = strtok_s(NULL, "\t, \n", &context);
+		(*this->hedges)[i]->setPrev(this->searchHedge(token));
+	}
 }
 
 DCEL::~DCEL() {
@@ -220,6 +344,11 @@ std::vector<Vertex*>* DCEL::getVertices() {
 void DCEL::setVertices(std::vector<Vertex*>* _v) {
 	this->vertices = _v;
 }
+
+Vertex* DCEL::getLmost(){return this->lmost;}
+Vertex* DCEL::getRmost(){return this->rmost;}
+Vertex* DCEL::getTmost(){return this->tmost;}
+Vertex* DCEL::getBmost(){return this->bmost;}
 
 
 void DCEL::addEdge(Vertex* _v1, Vertex* _v2) {
@@ -378,123 +507,6 @@ void DCEL::deleteEdge(HEdge* _e) {
 		}
 	}
 }
-int DCEL::texttoDCEL(const char* fileName) {
-
-	std::ifstream readFile;
-	readFile.open(fileName);
-
-	if (!readFile.is_open()) {
-		std::cout << "Error opening the file" << "(" << fileName << ")" << std::endl;
-		return -1;
-	}
-
-	char* buffer = new char[256];
-	readFile.getline(buffer, 256);
-
-	char* context = NULL;
-
-	char* token = strtok_s(buffer, "\t, \n", &context);
-	this->num_vertices = atoi(token);
-
-	token = strtok_s(NULL, "\t, \n", &context);
-	this->num_faces = atoi(token);
-
-	token = strtok_s(NULL, "\t, \n", &context);
-	this->num_hedges = atoi(token);
-
-	(*this->vertices).resize(num_vertices);
-	for (int i = 0; i < num_vertices; i++) {
-		(*this->vertices)[i] = new Vertex();
-	}
-
-	(*this->faces).resize(num_faces);
-	for (int i = 0; i < num_faces; i++) {
-		(*this->faces)[i] = new Face();
-	}
-
-	(*this->hedges).resize(num_hedges);
-	for (int i = 0; i < num_hedges; i++) {
-		(*this->hedges)[i] = new HEdge();
-	}
-
-	readFile.getline(buffer, 256);
-
-	token = strtok_s(buffer, "\t, ", &context);
-	(*this->vertices)[0]->setVertexKey(token);
-
-	for (int i = 1; i < this->num_vertices; i++) {
-		token = strtok_s(NULL, "\t, ", &context);
-		(*this->vertices)[i]->setVertexKey(token);
-	}
-
-	readFile.getline(buffer, 256);
-
-	token = strtok_s(buffer, "\t, ", &context);
-	(*this->faces)[0]->setFaceKey(token);
-	for (int i = 1; i < this->num_faces; i++) {
-		token = strtok_s(NULL, "\t, ", &context);
-		(*this->faces)[i]->setFaceKey(token);
-	}
-
-	readFile.getline(buffer, 256);
-
-	token = strtok_s(buffer, "\t, ", &context);
-	(*this->hedges)[0]->setHedgeKey(token);
-	for (int i = 1; i < this->num_hedges; i++) {
-		token = strtok_s(NULL, "\t, ", &context);
-		(*this->hedges)[i]->setHedgeKey(token);
-
-	}
-
-	for (int i = 0; i < num_vertices; i++) {
-		readFile.getline(buffer, 256);
-		token = strtok_s(buffer, ", \t", &context);
-		token = strtok_s(NULL, ", \t", &context);
-		(*this->vertices)[i]->setx(atof(token));
-		token = strtok_s(NULL, ", \t", &context);
-		(*this->vertices)[i]->sety(atof(token));
-		token = strtok_s(NULL, ", \t", &context);
-		(*this->vertices)[i]->setIncidentEdge(this->searchHedge(token));
-	}
-
-	int num_inner_components = 0;
-	for (int i = 0; i < num_faces; i++) {
-		readFile.getline(buffer, 256);
-		token = strtok_s(buffer, ", \t", &context);
-		token = strtok_s(NULL, ", \t", &context);
-		(*this->faces)[i]->setOuter(this->searchHedge(token));
-		token = strtok_s(NULL, ", \t", &context);
-
-		num_inner_components = atoi(token);
-		if (num_inner_components == 0) break;
-
-		token = strtok_s(NULL, ", \t", &context);
-
-		(*this->faces)[i]->getInners()->push_back(this->searchHedge(token));
-		for (int j = 1; j < num_inner_components; j++) {
-			token = strtok_s(NULL, ", \t", &context);
-			(*this->faces)[i]->getInners()->push_back(this->searchHedge(token));
-		}
-	}
-
-	for (int i = 0; i < num_hedges; i++) {
-		readFile.getline(buffer, 256);
-		token = strtok_s(buffer, ", \t", &context);
-		token = strtok_s(NULL, ", \t", &context);
-		(*this->hedges)[i]->setOrigin(this->searchVertex(token));
-		token = strtok_s(NULL, ", \t", &context);
-		(*this->hedges)[i]->setTwin(this->searchHedge(token));
-		token = strtok_s(NULL, ", \t", &context);
-		(*this->hedges)[i]->setIncidentFace(this->searchFace(token));
-		token = strtok_s(NULL, ", \t", &context);
-		(*this->hedges)[i]->setNext(this->searchHedge(token));
-		token = strtok_s(NULL, ", \t", &context);
-		(*this->hedges)[i]->setPrev(this->searchHedge(token));
-	}
-	return 0;
-
-}
-
 
 HEdge* DCEL::searchHedge(char* key) {
 	for (int i = 0; i < this->getHedges()->size(); i++) {
@@ -571,6 +583,7 @@ void DCEL::printFaceTab() {
 }
 
 DCEL* DCEL::mergeDCEL(DCEL* _d) {
+	/*
 	enum Event {
 		START,
 		END,
@@ -828,4 +841,5 @@ DCEL* DCEL::mergeDCEL(DCEL* _d) {
 		}
 		delete(curevent);
 	}
+	*/
 }

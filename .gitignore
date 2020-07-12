@@ -5,3 +5,7 @@ dnn/UpgradeLog2.htm
 dnn/DataStructures/DCEL/DCEL.vcxproj.filters
 
 
+.vscode/tasks.json
+.vscode/settings.json
+.vscode/launch.json
+.vscode/c_cpp_properties.json

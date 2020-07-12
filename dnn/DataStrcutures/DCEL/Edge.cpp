@@ -4,8 +4,8 @@
 #define ERR 1e-6
 
 Edge::Edge() {
-	this->s = new Point<>();
-	this->t = new Point<>();
+	this->s = new Point();
+	this->t = new Point();
 }
 
 
@@ -85,7 +85,7 @@ Point* Edge::crossing(Edge* _e, bool closed = true) {
 			return nullptr;
 		}
 		else if (((t == 0 || t == 1) || (s == 0 || s == 1)) && !closed) {
-			printf("if open");
+			//printf("if open");
 			return nullptr;
 		}
 		else {

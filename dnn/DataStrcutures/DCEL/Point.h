@@ -2,22 +2,22 @@
 //this class defines a point in 2D space
 
 //can use int, double
-template <typename T = double>
+//template <typename T = double>
 class Point {
 protected:
-	T x, y;
+	double x, y;
 
 public:
 
 	Point();
-	Point(T, T);
-	Point(Point<T>*);
+	Point(double, double);
+	Point(Point*);
 	~Point();
-	bool operator==(Point<T>);
-	T getx(void);
-	void setx(T);
-	T gety(void);
-	void sety(T);
+	bool operator==(Point);
+	double getx(void);
+	void setx(double);
+	double gety(void);
+	void sety(double);
 
-	double distance(Point<T>);
+	double distance(Point);
 };

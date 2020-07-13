@@ -8,23 +8,26 @@
 #include <iostream>
 #include <iomanip>
 #include <cstring>
+#define BUFFERSIZE 1000
+
+
 
 Vertex::Vertex() : Point() {
 	this->vertex_key = nullptr;
 	this->incidentEdge = nullptr;
 }
 
-Vertex::Vertex(HEdge *_e) : Point() {
+Vertex::Vertex(HEdge* _e) : Point() {
 	this->vertex_key = nullptr;
 	this->incidentEdge = _e;
 }
 
-Vertex::Vertex(Point *_p) : Point(_p) {
+Vertex::Vertex(Point* _p) : Point(_p) {
 	this->vertex_key = nullptr;
 	this->incidentEdge = nullptr;
 }
 
-Vertex::Vertex(Point *_p, HEdge *_e) : Point(_p) {
+Vertex::Vertex(Point* _p, HEdge* _e) : Point(_p) {
 	this->vertex_key = nullptr;
 	this->incidentEdge = _e;
 }
@@ -42,7 +45,7 @@ void Vertex::setVertexKey(char* _k) {
 	strcpy_s(this->vertex_key, strlen(_k) + 1, _k);
 }
 
-void Vertex::setIncidentEdge(HEdge *_e) {
+void Vertex::setIncidentEdge(HEdge* _e) {
 	this->incidentEdge = _e;
 }
 
@@ -58,7 +61,7 @@ HEdge::HEdge() : Edge() {
 	this->twin = nullptr;
 }
 
-HEdge::HEdge(Vertex *_v1, Vertex *_v2) : Edge(_v1, _v2) {
+HEdge::HEdge(Vertex* _v1, Vertex* _v2) : Edge(_v1, _v2) {
 	this->origin = _v1;
 	this->twin = new HEdge();
 	this->twin->origin = _v2;
@@ -87,8 +90,6 @@ void HEdge::setHedgeKey(char* _k) {
 	strcpy_s(this->hedge_key, strlen(_k) + 1, _k);
 
 }
-
-
 
 Vertex* HEdge::getOrigin() {
 	return this->origin;
@@ -128,7 +129,7 @@ Face* HEdge::getIncidentFace() {
 	return this->incidentFace;
 }
 
-void HEdge::setIncidentFace(Face *_f) {
+void HEdge::setIncidentFace(Face* _f) {
 	this->incidentFace = _f;
 }
 
@@ -156,7 +157,7 @@ bool Face::isOutMost() {
 	return !outer;
 }
 
-void Face::setOuter(HEdge *_e) {
+void Face::setOuter(HEdge* _e) {
 	this->outer = _e;
 }
 
@@ -173,7 +174,7 @@ void Face::setInners(std::vector<HEdge*>* _i) {
 	this->inners = _i;
 }
 */
-void Face::addInner(HEdge *_e){
+void Face::addInner(HEdge* _e) {
 	this->inners->push_back(_e);
 }
 
@@ -189,24 +190,28 @@ DCEL::DCEL() {
 	tmost = nullptr;
 	bmost = nullptr;
 	rmost = nullptr;
-	Face *of = new Face();
+
+	Face* of = new Face();
 	this->faces->push_back(of);
 }
 
 DCEL::DCEL(FILE* readFile) {
-	char* buffer = new char[256];
-	fgets(buffer, 256,readFile);	
+	char* buffer = new char[BUFFERSIZE];
+	fgets(buffer, BUFFERSIZE, readFile);
 	char* context = NULL;
 
 	// Number of Faces HEdges and Vertex
 	char* token = strtok_s(buffer, "\t, \n", &context);
 	this->num_vertices = atoi(token);
+	//std::cout << this->num_vertices << std::endl;
 
 	token = strtok_s(NULL, "\t, \n", &context);
 	this->num_faces = atoi(token);
+	//std::cout << this->num_faces << std::endl;
 
 	token = strtok_s(NULL, "\t, \n", &context);
 	this->num_hedges = atoi(token);
+	//std::cout << this->num_hedges << std::endl;
 
 	this->vertices = new std::vector<Vertex*>(num_vertices);
 	for (int i = 0; i < num_vertices; i++) {
@@ -222,10 +227,8 @@ DCEL::DCEL(FILE* readFile) {
 		(*this->hedges)[i] = new HEdge();
 	}
 
-	
-	//Set Keys of Faces HEdges and Vertexs
-	fgets(buffer, 256,readFile);
-
+	//Set Keys of Faces, HEdges, and Vertices
+	fgets(buffer, BUFFERSIZE, readFile);
 	token = strtok_s(buffer, "\t, \n", &context);
 	(*this->vertices)[0]->setVertexKey(token);
 
@@ -234,29 +237,29 @@ DCEL::DCEL(FILE* readFile) {
 		(*this->vertices)[i]->setVertexKey(token);
 	}
 
-	fgets(buffer, 256,readFile);
 
+	fgets(buffer, BUFFERSIZE, readFile);
 	token = strtok_s(buffer, "\t, \n", &context);
 	(*this->faces)[0]->setFaceKey(token);
+
 	for (int i = 1; i < this->num_faces; i++) {
 		token = strtok_s(NULL, "\t, \n", &context);
 		(*this->faces)[i]->setFaceKey(token);
 	}
 
-	fgets(buffer, 256,readFile);
-
+	fgets(buffer, BUFFERSIZE, readFile);
 	token = strtok_s(buffer, "\t, \n", &context);
 	(*this->hedges)[0]->setHedgeKey(token);
+
 	for (int i = 1; i < this->num_hedges; i++) {
 		token = strtok_s(NULL, "\t, \n", &context);
 		(*this->hedges)[i]->setHedgeKey(token);
 
 	}
 
-
-	//Set Vertex information
+	// Set Vertex information
 	for (int i = 0; i < num_vertices; i++) {
-		fgets(buffer, 256,readFile);
+		fgets(buffer, BUFFERSIZE, readFile);
 		token = strtok_s(buffer, "\t, \n", &context);
 		token = strtok_s(NULL, "\t, \n", &context);
 		(*this->vertices)[i]->setx(atof(token));
@@ -265,41 +268,35 @@ DCEL::DCEL(FILE* readFile) {
 		token = strtok_s(NULL, "\t, \n", &context);
 		(*this->vertices)[i]->setIncidentEdge(this->searchHedge(token));
 
-		if(this->lmost)  this->lmost = this->lmost->getx() > (*this->vertices)[i]->getx() ? (*this->vertices)[i] : this->lmost;
+		if (this->lmost)  this->lmost = this->lmost->getx() > (*this->vertices)[i]->getx() ? (*this->vertices)[i] : this->lmost;
 		else this->lmost = (*this->vertices)[i];
-		if(this->rmost)  this->rmost = this->rmost->getx() < (*this->vertices)[i]->getx() ? (*this->vertices)[i] : this->rmost;
+		if (this->rmost)  this->rmost = this->rmost->getx() < (*this->vertices)[i]->getx() ? (*this->vertices)[i] : this->rmost;
 		else this->rmost = (*this->vertices)[i];
-		if(this->bmost)  this->bmost = this->bmost->gety() > (*this->vertices)[i]->gety() ? (*this->vertices)[i] : this->bmost;
+		if (this->bmost)  this->bmost = this->bmost->gety() > (*this->vertices)[i]->gety() ? (*this->vertices)[i] : this->bmost;
 		else this->bmost = (*this->vertices)[i];
-		if(this->tmost)  this->tmost = this->tmost->gety() < (*this->vertices)[i]->gety() ? (*this->vertices)[i] : this->tmost;
+		if (this->tmost)  this->tmost = this->tmost->gety() < (*this->vertices)[i]->gety() ? (*this->vertices)[i] : this->tmost;
 		else this->tmost = (*this->vertices)[i];
 	}
 
-	//Set Face information
+	// Set Face information
 	int num_inner_components = 0;
 	for (int i = 0; i < num_faces; i++) {
-		fgets(buffer, 256,readFile);
+		fgets(buffer, BUFFERSIZE, readFile);
 		token = strtok_s(buffer, "\t, \n", &context);
 		token = strtok_s(NULL, "\t, \n", &context);
 		(*this->faces)[i]->setOuter(this->searchHedge(token));
 		token = strtok_s(NULL, "\t, \n", &context);
-
 		num_inner_components = atoi(token);
-		if (num_inner_components == 0){
-			continue;
-		}	// WHY BREAK?
-		token = strtok_s(NULL, "\t, \n", &context);
-		(*this->faces)[i]->getInners()->push_back(this->searchHedge(token));
-		for (int j = 1; j < num_inner_components; j++) {
+
+		for (int j = 0; j < num_inner_components; j++) {
 			token = strtok_s(NULL, "\t, \n", &context);
 			(*this->faces)[i]->getInners()->push_back(this->searchHedge(token));
 		}
 	}
 
-
-	//Set Half Edge information
+	// Set Half Edge information
 	for (int i = 0; i < num_hedges; i++) {
-		fgets(buffer, 256,readFile);
+		fgets(buffer, BUFFERSIZE, readFile);
 		token = strtok_s(buffer, "\t, \n", &context);
 		token = strtok_s(NULL, "\t, \n", &context);
 		(*this->hedges)[i]->setOrigin(this->searchVertex(token));
@@ -345,10 +342,10 @@ void DCEL::setVertices(std::vector<Vertex*>* _v) {
 	this->vertices = _v;
 }
 
-Vertex* DCEL::getLmost(){return this->lmost;}
-Vertex* DCEL::getRmost(){return this->rmost;}
-Vertex* DCEL::getTmost(){return this->tmost;}
-Vertex* DCEL::getBmost(){return this->bmost;}
+Vertex* DCEL::getLmost() { return this->lmost; }
+Vertex* DCEL::getRmost() { return this->rmost; }
+Vertex* DCEL::getTmost() { return this->tmost; }
+Vertex* DCEL::getBmost() { return this->bmost; }
 
 
 void DCEL::addEdge(Vertex* _v1, Vertex* _v2) {
@@ -419,7 +416,8 @@ void DCEL::addEdge(Vertex* _v1, Vertex* _v2) {
 			tmost = _v2;
 			bmost = _v1;
 		}
-	} else {
+	}
+	else {
 		if (lmost->getx() > _v1->getx()) {
 			lmost = _v1;
 		}
@@ -454,7 +452,8 @@ void DCEL::deleteEdge(HEdge* _e) {
 		Vertex* _v = *i;
 		if ((_v == _v1) || (_v == _v2)) {
 			i = this->getVertices()->erase(i);
-		} else {
+		}
+		else {
 			i++;
 		}
 	}
@@ -462,7 +461,8 @@ void DCEL::deleteEdge(HEdge* _e) {
 		HEdge* _ee = *i;
 		if (_ee == _e) {
 			i = this->getHedges()->erase(i);
-		} else {
+		}
+		else {
 			i++;
 		}
 	}
@@ -537,16 +537,16 @@ Face* DCEL::searchFace(char* key) {
 }
 
 void DCEL::printVertexTab() {
-	std::cout << "\n" << "********** Vertex Table ***********" << "\n";
+	std::cout << "\n" << "*********** Vertex Table ************" << "\n";
 	std::cout << "vertex" << "\tCoordinates " << "\tIncident Edge " << "\n";
 
 	for (int i = 0; i < this->vertices->size(); i++)
 	{
-		std::cout << std::setw(4) << (*this->vertices)[i]->getVertexKey() << std::setw(7) << "(" << (*this->vertices)[i]->getx() << ", " << (*this->vertices)[i]->gety() << ")" << std::setw(15) << (*this->vertices)[i]->getIncidentEdge()->getHedgeKey() << std::endl;
+		std::cout << std::setw(4) << (*this->vertices)[i]->getVertexKey() << std::setw(6) << "(" << std::setw(2) << (*this->vertices)[i]->getx() << ", " << std::setw(2) << (*this->vertices)[i]->gety() << ")" << std::setw(14) << (*this->vertices)[i]->getIncidentEdge()->getHedgeKey() << std::endl;
 	}
 }
 void DCEL::printHedgeTab() {
-	std::cout << "\n" << "********** Half-edge Table ***********" << "\n";
+	std::cout << "\n" << "****************** Half-edge Table ******************" << "\n";
 	std::cout << "Half-edge " << " Origin " << "  Twin" << "  IncidentFace" << "  Next" << "    Prev" << "\n";
 	for (int i = 0; i < this->hedges->size(); i++)
 	{
@@ -555,11 +555,11 @@ void DCEL::printHedgeTab() {
 }
 
 void DCEL::printFaceTab() {
-	std::cout << "\n" << "********** Face Table ***********" << "\n";
+	std::cout << "\n" << "************ Face Table *************" << "\n";
 	std::cout << "Face " << " OuterComponent " << "InnerComponents" << "\n";
 	for (int i = 0; i < this->faces->size(); i++)
 	{
-		std::cout << (*this->faces)[i]->getFaceKey() << "\t";
+		std::cout << std::setw(4) << (*this->faces)[i]->getFaceKey() << "\t";
 
 		if ((*this->faces)[i]->getOuter() == nullptr) {
 			std::cout << " NULL \t\t";
@@ -732,7 +732,7 @@ DCEL* DCEL::mergeDCEL(DCEL* _d) {
 				curv->getIncidentEdge()->getPrev()->setNext(hedge);
 				curv->getIncidentEdge()->setPrev(hedge->getTwin());
 			}
-			else 
+			else
 				curv->setIncidentEdge(hedge);
 			curedge->value = *curevent->value.e1;
 			curedge->value.cd = nullptr;
@@ -842,4 +842,5 @@ DCEL* DCEL::mergeDCEL(DCEL* _d) {
 		delete(curevent);
 	}
 	*/
+	return nullptr;
 }

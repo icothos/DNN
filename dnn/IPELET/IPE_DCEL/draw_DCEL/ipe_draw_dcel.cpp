@@ -1,5 +1,3 @@
-// Ipelet for L1 voronoi diagram
-
 #include "ipelet.h"
 #include "ipepage.h"
 #include "../../IpeIO/ipeIO.h"
@@ -43,14 +41,14 @@ bool IO_Test_Ipelet::run(int, IpeletData *data, IpeletHelper *helper)
 	DCEL dcel(fp);
 	fclose(fp);
 
-	double width = 2;// dcel.getRmost()->getx() - dcel.getLmost()->getx();
-	double height = 2;//dcel.getTmost()->gety() - dcel.getBmost()->gety();
-	double ipe_width = 100 , ipe_height = 100;
-	double ipe_x=200, ipe_y=200;
-	
-	for(auto f_p : *dcel.getFaces()){
+	double width  = 2; // dcel.getRmost()->getx() - dcel.getLmost()->getx();
+	double height = 2; // dcel.getTmost()->gety() - dcel.getBmost()->gety();
+	double ipe_width = 60, ipe_height = 60;
+	double ipe_x = 100, ipe_y = 100;
 
+	for(auto f_p : *dcel.getFaces()){
 		for(auto e_p : *f_p->getInners()){
+			if (e_p == nullptr) continue;
 			auto cur = e_p;
 			do{
 				Vertex org = *cur->getOrigin();
@@ -61,15 +59,15 @@ bool IO_Test_Ipelet::run(int, IpeletData *data, IpeletHelper *helper)
 				cur = cur->getNext();
 			}while(cur != e_p);
 		}
-		
+
 		auto e_p = f_p->getOuter();
 		if(e_p == nullptr) continue;
 		auto cur = e_p;
 		do{
 			Vertex org = *cur->getOrigin();
 			Vertex dest = *cur->getNext()->getOrigin();
-			ipe::Vector v1(org.getx()/width*ipe_width+ipe_x,org.gety()/height * ipe_height +ipe_y);
-			ipe::Vector v2(dest.getx()/width*ipe_width+ipe_x,dest.gety()/height * ipe_height +ipe_y);
+			ipe::Vector v1(org.getx() / width * ipe_width + ipe_x, org.gety() / height * ipe_height + ipe_y);
+			ipe::Vector v2(dest.getx() / width * ipe_width + ipe_x, dest.gety() / height * ipe_height + ipe_y);
 			segs.Draw_segment(data,helper,v1,v2);
 			cur = cur->getNext();
 		}while(cur != e_p);

@@ -105,6 +105,7 @@ public:
 	HEdge* searchHedge(char* key);
 	Vertex* searchVertex(char* key);
 	Face* searchFace(char* key);
+	void DCELtotext(FILE*);
 	void printVertexTab();
 	void printHedgeTab();
 	void printFaceTab();

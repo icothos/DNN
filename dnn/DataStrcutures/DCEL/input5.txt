@@ -24,7 +24,7 @@ f1	e1_2	0	NULL
 f2	e13_1	0	NULL
 f3	e2_2	0	NULL
 f4	e15_1	0	NULL
-f5	e3_2	2	e22_1 e24_1
+f5	e3_2	2	e22_1	e24_1
 f6	e18_1	0	NULL
 f7	e19_2	0	NULL
 f8	e8_2	0	NULL

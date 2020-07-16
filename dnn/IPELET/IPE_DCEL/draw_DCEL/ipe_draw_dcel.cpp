@@ -64,7 +64,7 @@ bool IO_Test_Ipelet::run(int, IpeletData *data, IpeletHelper *helper)
 		if(e_p == nullptr) continue;
 		auto cur = e_p;
 		do{
-			Vertex org = *cur->getOrigin();
+			Vertex org  = *cur->getOrigin();
 			Vertex dest = *cur->getNext()->getOrigin();
 			ipe::Vector v1(org.getx() / width * ipe_width + ipe_x, org.gety() / height * ipe_height + ipe_y);
 			ipe::Vector v2(dest.getx() / width * ipe_width + ipe_x, dest.gety() / height * ipe_height + ipe_y);
